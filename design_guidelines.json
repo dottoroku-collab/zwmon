@@ -1,0 +1,153 @@
+{
+  "brand": {
+    "name": "Telkom Control",
+    "tone": "Enterprise, Tactical, High-Precision",
+    "description": "A mission-critical dashboard for SLA monitoring and field operations.",
+    "emotional_archetype": "The Performance Pro"
+  },
+  "typography": {
+    "headings": {
+      "family": "Manrope, sans-serif",
+      "weights": ["600", "700", "800"],
+      "usage": "Use for all page titles, card headers, and KPI values. Tracking tight (-0.02em)."
+    },
+    "body": {
+      "family": "Inter, sans-serif",
+      "weights": ["400", "500"],
+      "usage": "Use for all data tables, descriptions, and form inputs. Relaxed leading."
+    },
+    "mono": {
+      "family": "JetBrains Mono, monospace",
+      "usage": "Use for Ticket IDs, IP addresses, and Timestamps."
+    }
+  },
+  "colors": {
+    "theme": "dark",
+    "background": {
+      "default": "#020617",
+      "paper": "#0f172a",
+      "subtle": "#1e293b"
+    },
+    "primary": {
+      "main": "#e11d48",
+      "light": "#fb7185",
+      "dark": "#be123c",
+      "contrast": "#ffffff",
+      "usage": "Primary Actions, Critical Alerts, Telkom Brand Elements"
+    },
+    "secondary": {
+      "main": "#06b6d4",
+      "light": "#67e8f9",
+      "dark": "#0e7490",
+      "usage": "Active States, Info Indicators, Data Visualization"
+    },
+    "status": {
+      "success": "#10b981",
+      "warning": "#f59e0b",
+      "error": "#ef4444",
+      "info": "#3b82f6"
+    },
+    "gradients": {
+      "glow": "linear-gradient(135deg, rgba(225, 29, 72, 0.2) 0%, rgba(2, 6, 23, 0) 100%)",
+      "glass": "linear-gradient(180deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.5) 100%)"
+    }
+  },
+  "visual_enhancers": {
+    "glassmorphism": {
+      "base": "bg-slate-900/60 backdrop-blur-xl border border-white/10",
+      "hover": "hover:bg-slate-800/60 hover:border-white/20 transition-all duration-300"
+    },
+    "shadows": {
+      "card": "0 8px 32px -4px rgba(0, 0, 0, 0.5)",
+      "glow": "0 0 20px -5px rgba(225, 29, 72, 0.3)"
+    },
+    "borders": {
+      "default": "1px solid rgba(255, 255, 255, 0.1)",
+      "active": "1px solid rgba(6, 182, 212, 0.5)"
+    }
+  },
+  "layout": {
+    "grid_system": "Bento Grid (Mode B)",
+    "container": "max-w-7xl mx-auto p-6",
+    "spacing": {
+      "section_gap": "gap-8",
+      "card_padding": "p-6"
+    }
+  },
+  "components": {
+    "cards": {
+      "style": "Glassmorphic, sharp corners or small radius (rounded-lg).",
+      "content_padding": "p-6",
+      "interaction": "Scale 1.01 on hover, border glow."
+    },
+    "buttons": {
+      "primary": "bg-primary text-white hover:bg-primary/90 shadow-[0_0_15px_rgba(225,29,72,0.5)] font-semibold uppercase tracking-wider text-sm h-10 px-6 rounded-md",
+      "secondary": "bg-secondary/10 text-secondary hover:bg-secondary/20 border border-secondary/50 h-10 px-6 rounded-md",
+      "ghost": "hover:bg-white/5 text-slate-300 hover:text-white"
+    },
+    "inputs": {
+      "style": "bg-slate-950/50 border-slate-700 focus:border-primary focus:ring-1 focus:ring-primary/50 text-white placeholder:text-slate-500 rounded-md h-11"
+    },
+    "tables": {
+      "header": "bg-slate-900/50 text-slate-400 uppercase text-xs tracking-wider border-b border-slate-800",
+      "row": "hover:bg-white/5 border-b border-slate-800/50 transition-colors",
+      "cell": "py-4 px-6 text-sm text-slate-200"
+    }
+  },
+  "charts": {
+    "library": "Recharts",
+    "theme": {
+      "background": "transparent",
+      "text": "#94a3b8",
+      "grid": "#334155",
+      "colors": ["#e11d48", "#06b6d4", "#10b981", "#f59e0b", "#8b5cf6"]
+    }
+  },
+  "images": {
+    "login_background": {
+      "url": "https://images.pexels.com/photos/4597280/pexels-photo-4597280.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "alt": "Data Center Background",
+      "treatment": "Overlay with heavy gradient (slate-950/90 to slate-900/80) to ensure text readability."
+    },
+    "services": {
+      "internet": {
+        "url": "https://images.pexels.com/photos/17489152/pexels-photo-17489152.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "alt": "Internet Dedicated Server Rack"
+      },
+      "cctv": {
+        "url": "https://images.unsplash.com/photo-1688584177352-a40d4ba17561?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzV8MHwxfHNlYXJjaHwxfHxzZWN1cml0eSUyMGNhbWVyYSUyMGxlbnMlMjBkYXJrJTIwb3V0ZG9vciUyMGhvcm4lMjBzcGVha2VyJTIwcG9sZSUyMGZ1dHVyaXN0aWMlMjBkaWdpdGFsJTIwY2l0eSUyMG1hcCUyMGJsdWV8ZW58MHx8fHwxNzcyMTYwODM2fDA&ixlib=rb-4.1.0&q=85",
+        "alt": "CCTV Surveillance"
+      },
+      "speaker": {
+        "url": "https://images.unsplash.com/photo-1673895090601-28e46ed1f689?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzV8MHwxfHNlYXJjaHwyfHxzZWN1cml0eSUyMGNhbWVyYSUyMGxlbnMlMjBkYXJrJTIwb3V0ZG9vciUyMGhvcm4lMjBzcGVha2VyJTIwcG9sZSUyMGZ1dHVyaXN0aWMlMjBkaWdpdGFsJTIwY2l0eSUyMG1hcCUyMGJsdWV8ZW58MHx8fHwxNzcyMTYwODM2fDA&ixlib=rb-4.1.0&q=85",
+        "alt": "IP Speaker System"
+      }
+    }
+  },
+  "instructions_to_main_agent": [
+    "Prioritize Dark Mode: Ensure 'dark' class is applied to the root element by default.",
+    "Use 'Sistem Tiketing & SLA Control' as the app title.",
+    "Login Page: Split screen. Left side form (glassmorphic), Right side image (Data Center with overlay).",
+    "Dashboard: Implement Role-Based Rendering (Admin, AM, Helpdesk, EOS, Client).",
+    "EOS Logbook: Mobile-first design. Large touch targets for photo upload.",
+    "Restitution Calculator: Use a specialized card with real-time calculation fields.",
+    "Navigation: Sidebar for desktop, Bottom nav for mobile (EOS/Helpdesk).",
+    "Notification: Use a bell icon with a red dot for real-time WebSocket alerts.",
+    "Use Lucide-React icons: 'Camera' for CCTV, 'Server' for Internet, 'Megaphone' for Speaker.",
+    "Add 'data-testid' to all interactive elements."
+  ],
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": [
+    "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients.",
+    "Don't make generic centered layouts, simplistic gradients, and uniform styling.",
+    "Create depth through layered design elements with z-index hierarchy.",
+    "Use glass-morphism effects with backdrop filters (12-24px blur).",
+    "You MUST NOT apply universal transition. Eg: transition: all.",
+    "You MUST NOT center align the app container.",
+    "Always use modern button styles like pill-shaped, or sharp button with interaction animations.",
+    "NEVER: use AI assistant Emoji characters like 🤖 etc.",
+    "Every interaction needs micro-animations.",
+    "Use 2-3x more spacing than feels comfortable.",
+    "Components MUST use named exports.",
+    "Use 'sonner' for toasts."
+  ]
+}

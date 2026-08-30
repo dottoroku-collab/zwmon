@@ -1,0 +1,858 @@
+{
+  "summary": {
+    "tests_run": 24,
+    "tests_passed": 23,
+    "success_rate": 95.83333333333334,
+    "timestamp": "2026-02-27T03:38:29.993764"
+  },
+  "results": [
+    {
+      "test": "Seed Initial Data",
+      "status": "PASS",
+      "timestamp": "2026-02-27T03:38:25.027082",
+      "response_data": {
+        "message": "Data sudah di-seed sebelumnya"
+      },
+      "error": null
+    },
+    {
+      "test": "Login - ADMIN",
+      "status": "PASS",
+      "timestamp": "2026-02-27T03:38:25.565437",
+      "response_data": {
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZjk5NjU0NDQtYzY2Yi00ZjQ1LThhYTctMzkxMzg4MzExMjMwIiwicm9sZSI6ImFkbWluIiwiZXhwIjoxNzcyMjQ5OTA1fQ.ilJOS8VgQvd5OoxT7bZwXIPGQGOasPX28vLZsUDIHtM",
+        "user": {
+          "id": "f9965444-c66b-4f45-8aa7-391388311230",
+          "username": "admin",
+          "email": "admin@telkom.co.id",
+          "role": "admin",
+          "full_name": "Administrator Telkom"
+        }
+      },
+      "error": null
+    },
+    {
+      "test": "Login - AM",
+      "status": "PASS",
+      "timestamp": "2026-02-27T03:38:26.067793",
+      "response_data": {
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZjA4OTEwYTItMDNmMS00NGQ5LWE5YWItMzYwYzhlNWE0OTZjIiwicm9sZSI6ImFtIiwiZXhwIjoxNzcyMjQ5OTA2fQ.3KORgg9pQ2dEItHmEdnqbIgOZB_BtZ2uAhPUS4IEqRM",
+        "user": {
+          "id": "f08910a2-03f1-44d9-a9ab-360c8e5a496c",
+          "username": "am_manager",
+          "email": "am@telkom.co.id",
+          "role": "am",
+          "full_name": "Account Manager"
+        }
+      },
+      "error": null
+    },
+    {
+      "test": "Login - HELPDESK",
+      "status": "PASS",
+      "timestamp": "2026-02-27T03:38:26.507211",
+      "response_data": {
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiMTRlYmE2NjQtZTkzMi00NTJlLWIxNjEtMGEzZWMwMGQ0YjYyIiwicm9sZSI6ImhlbHBkZXNrIiwiZXhwIjoxNzcyMjQ5OTA2fQ.g4qYTJU54flZMqaUGGiyf3JvWU3DRP2PZQBxIqPF_0o",
+        "user": {
+          "id": "14eba664-e932-452e-b161-0a3ec00d4b62",
+          "username": "helpdesk1",
+          "email": "helpdesk@telkom.co.id",
+          "role": "helpdesk",
+          "full_name": "Helpdesk Operator"
+        }
+      },
+      "error": null
+    },
+    {
+      "test": "Login - EOS",
+      "status": "PASS",
+      "timestamp": "2026-02-27T03:38:26.917177",
+      "response_data": {
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiMzJmZGY5ZTEtMDk0MC00NmU0LWI1OTAtMzkxMjUyNDVjOTU3Iiwicm9sZSI6ImVvcyIsImV4cCI6MTc3MjI0OTkwNn0.bjEVCMII_FShxaLCj6XrvICuwxXenqYDe3PSeku3G_g",
+        "user": {
+          "id": "32fdf9e1-0940-46e4-b590-39125245c957",
+          "username": "eos_tech",
+          "email": "eos@telkom.co.id",
+          "role": "eos",
+          "full_name": "EOS Teknisi Lapangan"
+        }
+      },
+      "error": null
+    },
+    {
+      "test": "Login - CLIENT",
+      "status": "PASS",
+      "timestamp": "2026-02-27T03:38:27.390006",
+      "response_data": {
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZWM1NDYwNWMtMGZmMC00N2JjLWFkYjktMjFkY2JjODc2ZTNhIiwicm9sZSI6ImNsaWVudCIsImV4cCI6MTc3MjI0OTkwN30.OjFkxYEvTA5p-O-xETG_4jdGIB7Fsze210RNH08K89I",
+        "user": {
+          "id": "ec54605c-0ff0-47bc-adb9-21dcbc876e3a",
+          "username": "warroom_op",
+          "email": "warroom@kominfo.go.id",
+          "role": "client",
+          "full_name": "Operator War Room Kominfo"
+        }
+      },
+      "error": null
+    },
+    {
+      "test": "Admin - View Users",
+      "status": "PASS",
+      "timestamp": "2026-02-27T03:38:27.531632",
+      "response_data": {
+        "users": [
+          {
+            "username": "admin",
+            "email": "admin@telkom.co.id",
+            "role": "admin",
+            "full_name": "Administrator Telkom",
+            "phone": "081234567890",
+            "id": "f9965444-c66b-4f45-8aa7-391388311230",
+            "is_active": true,
+            "created_at": "2026-02-27T03:32:42.569112+00:00"
+          },
+          {
+            "username": "am_manager",
+            "email": "am@telkom.co.id",
+            "role": "am",
+            "full_name": "Account Manager",
+            "phone": "081234567891",
+            "id": "f08910a2-03f1-44d9-a9ab-360c8e5a496c",
+            "is_active": true,
+            "created_at": "2026-02-27T03:32:42.571664+00:00"
+          },
+          {
+            "username": "helpdesk1",
+            "email": "helpdesk@telkom.co.id",
+            "role": "helpdesk",
+            "full_name": "Helpdesk Operator",
+            "phone": "081234567892",
+            "id": "14eba664-e932-452e-b161-0a3ec00d4b62",
+            "is_active": true,
+            "created_at": "2026-02-27T03:32:42.572727+00:00"
+          },
+          {
+            "username": "eos_tech",
+            "email": "eos@telkom.co.id",
+            "role": "eos",
+            "full_name": "EOS Teknisi Lapangan",
+            "phone": "081234567893",
+            "id": "32fdf9e1-0940-46e4-b590-39125245c957",
+            "is_active": true,
+            "created_at": "2026-02-27T03:32:42.574305+00:00"
+          },
+          {
+            "username": "warroom_op",
+            "email": "warroom@kominfo.go.id",
+            "role": "client",
+            "full_name": "Operator War Room Kominfo",
+            "phone": "081234567894",
+            "id": "ec54605c-0ff0-47bc-adb9-21dcbc876e3a",
+            "is_active": true,
+            "created_at": "2026-02-27T03:32:42.575675+00:00"
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "test": "Admin - Add User",
+      "status": "FAIL",
+      "timestamp": "2026-02-27T03:38:27.704184",
+      "response_data": {
+        "detail": [
+          {
+            "type": "value_error",
+            "loc": [
+              "body",
+              "email"
+            ],
+            "msg": "value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.",
+            "input": "test1772163507@telkom.test",
+            "ctx": {
+              "reason": "The part after the @-sign is a special-use or reserved name that cannot be used with email."
+            }
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "test": "Admin - View Service Points",
+      "status": "PASS",
+      "timestamp": "2026-02-27T03:38:27.875026",
+      "response_data": {
+        "points": [
+          {
+            "name": "CCTV Simpang 5 Bandara",
+            "location": "Simpang 5 Bandara",
+            "address": "Jl. Airport No. 1",
+            "service_type": "cctv",
+            "bandwidth": 10,
+            "ip_address": "10.10.1.1",
+            "id": "d7f54a01-04df-424e-9cb0-8df4f17a4789",
+            "is_active": true,
+            "created_at": "2026-02-27T03:32:42.577397+00:00"
+          },
+          {
+            "name": "CCTV Jl. Sudirman",
+            "location": "Jl. Sudirman",
+            "address": "Jl. Sudirman No. 45",
+            "service_type": "cctv",
+            "bandwidth": 10,
+            "ip_address": "10.10.1.2",
+            "id": "df3afcd9-4622-434a-90bf-0c5b71a848ae",
+            "is_active": true,
+            "created_at": "2026-02-27T03:32:42.597777+00:00"
+          },
+          {
+            "name": "SKPD Dinas Kominfo",
+            "location": "Balai Kota Lt. 9",
+            "address": "Jl. Ahmad Yani No. 2",
+            "service_type": "skpd",
+            "bandwidth": 100,
+            "ip_address": "10.20.1.1",
+            "id": "dcbee915-f989-43d0-95a7-27f2ad307e31",
+            "is_active": true,
+            "created_at": "2026-02-27T03:32:42.599988+00:00"
+          },
+          {
+            "name": "SKPD Dinas Pendidikan",
+            "location": "Kantor Dinas Pendidikan",
+            "address": "Jl. Perintis Kemerdekaan No. 5",
+            "service_type": "skpd",
+            "bandwidth": 50,
+            "ip_address": "10.20.1.2",
+            "id": "81e079d9-aced-47b2-a00e-de13d588e45b",
+            "is_active": true,
+            "created_at": "2026-02-27T03:32:42.623456+00:00"
+          },
+          {
+            "name": "IP Speaker Tiang 001",
+            "location": "Jl. Pantai Losari",
+            "address": "Jl. Pantai Losari KM 1",
+            "service_type": "ip_speaker",
+            "bandwidth": 5,
+            "ip_address": "10.30.1.1",
+            "id": "5267adde-25b1-4a2a-b856-32616a2419c8",
+            "is_active": true,
+            "created_at": "2026-02-27T03:32:42.624680+00:00"
+          },
+          {
+            "name": "IP Speaker Tiang 002",
+            "location": "Jl. Andi Pangerang",
+            "address": "Jl. Andi Pangerang No. 10",
+            "service_type": "ip_speaker",
+            "bandwidth": 5,
+            "ip_address": "10.30.1.2",
+            "id": "bd5be06b-b9ed-4828-b1f5-7f39f7be0865",
+            "is_active": true,
+            "created_at": "2026-02-27T03:32:42.625387+00:00"
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "test": "Admin - Add CCTV Point",
+      "status": "PASS",
+      "timestamp": "2026-02-27T03:38:27.994729",
+      "response_data": {
+        "message": "Titik layanan berhasil ditambahkan",
+        "point_id": "4ba87a71-c52c-41f2-b9e3-81f656247cb7"
+      },
+      "error": null
+    },
+    {
+      "test": "Admin - Add SKPD Point",
+      "status": "PASS",
+      "timestamp": "2026-02-27T03:38:28.129506",
+      "response_data": {
+        "message": "Titik layanan berhasil ditambahkan",
+        "point_id": "acdeddc1-5e11-4087-8bd1-99c181fa312a"
+      },
+      "error": null
+    },
+    {
+      "test": "Admin - Add IP_SPEAKER Point",
+      "status": "PASS",
+      "timestamp": "2026-02-27T03:38:28.253169",
+      "response_data": {
+        "message": "Titik layanan berhasil ditambahkan",
+        "point_id": "32fabdd4-e980-4a44-b2b4-8ad9892f9b9c"
+      },
+      "error": null
+    },
+    {
+      "test": "Calculate Restitution - CCTV",
+      "status": "PASS",
+      "timestamp": "2026-02-27T03:38:28.384875",
+      "response_data": {
+        "total_minutes_in_month": 44640,
+        "allowed_downtime_minutes": 223.2,
+        "actual_downtime_minutes": 300,
+        "excess_downtime_minutes": 76.79999999999998,
+        "pro_rata_fee": 5102040.82,
+        "uptime_percentage": 99.328,
+        "sla_target": 99.5,
+        "sla_met": false,
+        "restitution_amount": 8777.7,
+        "service_name": "Jaringan CCTV",
+        "service_type": "cctv",
+        "bandwidth_affected": 50.0,
+        "total_bandwidth": 4900,
+        "monthly_contract": 500000000.0,
+        "month": 12,
+        "year": 2024
+      },
+      "error": null
+    },
+    {
+      "test": "Calculate Restitution - SKPD",
+      "status": "PASS",
+      "timestamp": "2026-02-27T03:38:28.506230",
+      "response_data": {
+        "total_minutes_in_month": 44640,
+        "allowed_downtime_minutes": 223.2,
+        "actual_downtime_minutes": 180,
+        "excess_downtime_minutes": 0,
+        "pro_rata_fee": 14545454.55,
+        "uptime_percentage": 99.5968,
+        "sla_target": 99.5,
+        "sla_met": true,
+        "restitution_amount": 0,
+        "service_name": "Internet Dedicated SKPD",
+        "service_type": "skpd",
+        "bandwidth_affected": 100.0,
+        "total_bandwidth": 5500,
+        "monthly_contract": 800000000.0,
+        "month": 12,
+        "year": 2024
+      },
+      "error": null
+    },
+    {
+      "test": "Calculate Restitution - IP_SPEAKER",
+      "status": "PASS",
+      "timestamp": "2026-02-27T03:38:28.636356",
+      "response_data": {
+        "total_minutes_in_month": 44640,
+        "allowed_downtime_minutes": 223.2,
+        "actual_downtime_minutes": 600,
+        "excess_downtime_minutes": 376.79999999999995,
+        "pro_rata_fee": 10000000.0,
+        "uptime_percentage": 98.6559,
+        "sla_target": 99.5,
+        "sla_met": false,
+        "restitution_amount": 84408.6,
+        "service_name": "Internet IP Speaker",
+        "service_type": "ip_speaker",
+        "bandwidth_affected": 25.0,
+        "total_bandwidth": 500,
+        "monthly_contract": 200000000.0,
+        "month": 12,
+        "year": 2024
+      },
+      "error": null
+    },
+    {
+      "test": "Helpdesk - View Tickets",
+      "status": "PASS",
+      "timestamp": "2026-02-27T03:38:28.770096",
+      "response_data": {
+        "tickets": [
+          {
+            "id": "TKT-20260227-7E9CC5",
+            "title": "Internet SKPD Lambat",
+            "description": "Koneksi internet di Dinas Kominfo sangat lambat, speedtest hanya 5 Mbps padahal kontrak 100 Mbps",
+            "service_type": "skpd",
+            "service_point_id": "dcbee915-f989-43d0-95a7-27f2ad307e31",
+            "service_point_name": "SKPD Dinas Kominfo",
+            "bandwidth": 100,
+            "location": "Balai Kota Lt. 9",
+            "priority": "medium",
+            "status": "open",
+            "initial_indication": "Internet Lambat",
+            "client_id": "ec54605c-0ff0-47bc-adb9-21dcbc876e3a",
+            "client_name": "Operator War Room Kominfo",
+            "assigned_to": null,
+            "assigned_name": null,
+            "photos": [],
+            "logbook": {
+              "phase1": {
+                "open_ticket_time": "2026-02-27T03:32:42.631469+00:00",
+                "initial_indication": "Internet Lambat",
+                "photos": []
+              }
+            },
+            "review": null,
+            "am_verified": false,
+            "scenario": null,
+            "final_status": null,
+            "created_at": "2026-02-27T03:32:42.631473+00:00",
+            "updated_at": "2026-02-27T03:32:42.631475+00:00",
+            "arrival_time": null,
+            "completion_time": null,
+            "closed_at": null,
+            "total_downtime_minutes": null,
+            "sla_deadline": "2026-02-27T07:32:42.631477+00:00"
+          },
+          {
+            "id": "TKT-20260227-B4BBEE",
+            "title": "CCTV Offline - RTO",
+            "description": "CCTV di Simpang 5 menampilkan RTO saat di-ping dari War Room",
+            "service_type": "cctv",
+            "service_point_id": "d7f54a01-04df-424e-9cb0-8df4f17a4789",
+            "service_point_name": "CCTV Simpang 5 Bandara",
+            "bandwidth": 10,
+            "location": "Simpang 5 Bandara",
+            "priority": "high",
+            "status": "open",
+            "initial_indication": "RTO",
+            "client_id": "ec54605c-0ff0-47bc-adb9-21dcbc876e3a",
+            "client_name": "Operator War Room Kominfo",
+            "assigned_to": null,
+            "assigned_name": null,
+            "photos": [],
+            "logbook": {
+              "phase1": {
+                "open_ticket_time": "2026-02-27T03:32:42.631421+00:00",
+                "initial_indication": "RTO",
+                "photos": []
+              }
+            },
+            "review": null,
+            "am_verified": false,
+            "scenario": null,
+            "final_status": null,
+            "created_at": "2026-02-27T03:32:42.631435+00:00",
+            "updated_at": "2026-02-27T03:32:42.631438+00:00",
+            "arrival_time": null,
+            "completion_time": null,
+            "closed_at": null,
+            "total_downtime_minutes": null,
+            "sla_deadline": "2026-02-27T07:32:42.631440+00:00"
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "test": "Helpdesk - Get EOS Users",
+      "status": "PASS",
+      "timestamp": "2026-02-27T03:38:28.888819",
+      "response_data": {
+        "users": [
+          {
+            "username": "eos_tech",
+            "email": "eos@telkom.co.id",
+            "role": "eos",
+            "full_name": "EOS Teknisi Lapangan",
+            "phone": "081234567893",
+            "id": "32fdf9e1-0940-46e4-b590-39125245c957",
+            "is_active": true,
+            "created_at": "2026-02-27T03:32:42.574305+00:00"
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "test": "Client - Create CCTV Ticket",
+      "status": "PASS",
+      "timestamp": "2026-02-27T03:38:29.133457",
+      "response_data": {
+        "message": "Tiket berhasil dibuat",
+        "ticket_id": "TKT-20260227-6D23AB"
+      },
+      "error": null
+    },
+    {
+      "test": "Client - Create SKPD Ticket",
+      "status": "PASS",
+      "timestamp": "2026-02-27T03:38:29.261169",
+      "response_data": {
+        "message": "Tiket berhasil dibuat",
+        "ticket_id": "TKT-20260227-0BA71C"
+      },
+      "error": null
+    },
+    {
+      "test": "EOS - View Assigned Tickets",
+      "status": "PASS",
+      "timestamp": "2026-02-27T03:38:29.401274",
+      "response_data": {
+        "tickets": []
+      },
+      "error": null
+    },
+    {
+      "test": "EOS - Dashboard Stats",
+      "status": "PASS",
+      "timestamp": "2026-02-27T03:38:29.543493",
+      "response_data": {
+        "assigned_to_me": 0,
+        "completed_today": 0,
+        "cctv_total": 0,
+        "cctv_open": 0,
+        "skpd_total": 0,
+        "skpd_open": 0,
+        "ip_speaker_total": 0,
+        "ip_speaker_open": 0,
+        "recent_tickets": []
+      },
+      "error": null
+    },
+    {
+      "test": "Admin - Settings Access",
+      "status": "PASS",
+      "timestamp": "2026-02-27T03:38:29.682628",
+      "response_data": {
+        "settings": {
+          "contract_cctv": "500000000",
+          "contract_skpd": "800000000",
+          "contract_ip_speaker": "200000000",
+          "telegram_token": "",
+          "telegram_chat_ids": ""
+        }
+      },
+      "error": null
+    },
+    {
+      "test": "Admin - Reports Access",
+      "status": "PASS",
+      "timestamp": "2026-02-27T03:38:29.828941",
+      "response_data": {
+        "tickets": [
+          {
+            "id": "TKT-20260227-0BA71C",
+            "title": "Test SKPD Internet Lambat",
+            "description": "Internet SKPD very slow, speedtest only 10 Mbps",
+            "service_type": "skpd",
+            "service_point_id": null,
+            "service_point_name": null,
+            "bandwidth": 0,
+            "location": "Test Location SKPD",
+            "priority": "medium",
+            "status": "open",
+            "initial_indication": "Internet Lambat",
+            "client_id": "ec54605c-0ff0-47bc-adb9-21dcbc876e3a",
+            "client_name": "Operator War Room Kominfo",
+            "assigned_to": null,
+            "assigned_name": null,
+            "photos": [],
+            "logbook": {
+              "phase1": {
+                "open_ticket_time": "2026-02-27T03:38:29.233505+00:00",
+                "initial_indication": "Internet Lambat",
+                "photos": []
+              }
+            },
+            "review": null,
+            "am_verified": false,
+            "scenario": null,
+            "final_status": null,
+            "created_at": "2026-02-27T03:38:29.233523+00:00",
+            "updated_at": "2026-02-27T03:38:29.233527+00:00",
+            "arrival_time": null,
+            "completion_time": null,
+            "closed_at": null,
+            "total_downtime_minutes": null,
+            "sla_deadline": "2026-02-27T07:38:29.233530+00:00"
+          },
+          {
+            "id": "TKT-20260227-6D23AB",
+            "title": "Test CCTV RTO Issue",
+            "description": "CCTV showing RTO when pinged from War Room",
+            "service_type": "cctv",
+            "service_point_id": null,
+            "service_point_name": null,
+            "bandwidth": 0,
+            "location": "Test Location CCTV",
+            "priority": "high",
+            "status": "open",
+            "initial_indication": "RTO",
+            "client_id": "ec54605c-0ff0-47bc-adb9-21dcbc876e3a",
+            "client_name": "Operator War Room Kominfo",
+            "assigned_to": null,
+            "assigned_name": null,
+            "photos": [],
+            "logbook": {
+              "phase1": {
+                "open_ticket_time": "2026-02-27T03:38:29.113895+00:00",
+                "initial_indication": "RTO",
+                "photos": []
+              }
+            },
+            "review": null,
+            "am_verified": false,
+            "scenario": null,
+            "final_status": null,
+            "created_at": "2026-02-27T03:38:29.113906+00:00",
+            "updated_at": "2026-02-27T03:38:29.113909+00:00",
+            "arrival_time": null,
+            "completion_time": null,
+            "closed_at": null,
+            "total_downtime_minutes": null,
+            "sla_deadline": "2026-02-27T07:38:29.113911+00:00"
+          },
+          {
+            "id": "TKT-20260227-7E9CC5",
+            "title": "Internet SKPD Lambat",
+            "description": "Koneksi internet di Dinas Kominfo sangat lambat, speedtest hanya 5 Mbps padahal kontrak 100 Mbps",
+            "service_type": "skpd",
+            "service_point_id": "dcbee915-f989-43d0-95a7-27f2ad307e31",
+            "service_point_name": "SKPD Dinas Kominfo",
+            "bandwidth": 100,
+            "location": "Balai Kota Lt. 9",
+            "priority": "medium",
+            "status": "open",
+            "initial_indication": "Internet Lambat",
+            "client_id": "ec54605c-0ff0-47bc-adb9-21dcbc876e3a",
+            "client_name": "Operator War Room Kominfo",
+            "assigned_to": null,
+            "assigned_name": null,
+            "photos": [],
+            "logbook": {
+              "phase1": {
+                "open_ticket_time": "2026-02-27T03:32:42.631469+00:00",
+                "initial_indication": "Internet Lambat",
+                "photos": []
+              }
+            },
+            "review": null,
+            "am_verified": false,
+            "scenario": null,
+            "final_status": null,
+            "created_at": "2026-02-27T03:32:42.631473+00:00",
+            "updated_at": "2026-02-27T03:32:42.631475+00:00",
+            "arrival_time": null,
+            "completion_time": null,
+            "closed_at": null,
+            "total_downtime_minutes": null,
+            "sla_deadline": "2026-02-27T07:32:42.631477+00:00"
+          },
+          {
+            "id": "TKT-20260227-B4BBEE",
+            "title": "CCTV Offline - RTO",
+            "description": "CCTV di Simpang 5 menampilkan RTO saat di-ping dari War Room",
+            "service_type": "cctv",
+            "service_point_id": "d7f54a01-04df-424e-9cb0-8df4f17a4789",
+            "service_point_name": "CCTV Simpang 5 Bandara",
+            "bandwidth": 10,
+            "location": "Simpang 5 Bandara",
+            "priority": "high",
+            "status": "open",
+            "initial_indication": "RTO",
+            "client_id": "ec54605c-0ff0-47bc-adb9-21dcbc876e3a",
+            "client_name": "Operator War Room Kominfo",
+            "assigned_to": null,
+            "assigned_name": null,
+            "photos": [],
+            "logbook": {
+              "phase1": {
+                "open_ticket_time": "2026-02-27T03:32:42.631421+00:00",
+                "initial_indication": "RTO",
+                "photos": []
+              }
+            },
+            "review": null,
+            "am_verified": false,
+            "scenario": null,
+            "final_status": null,
+            "created_at": "2026-02-27T03:32:42.631435+00:00",
+            "updated_at": "2026-02-27T03:32:42.631438+00:00",
+            "arrival_time": null,
+            "completion_time": null,
+            "closed_at": null,
+            "total_downtime_minutes": null,
+            "sla_deadline": "2026-02-27T07:32:42.631440+00:00"
+          }
+        ],
+        "statistics": {
+          "total": 4,
+          "by_status": {
+            "open": 4
+          },
+          "by_service": {
+            "skpd": 2,
+            "cctv": 2
+          },
+          "by_scenario": {
+            "A": 0,
+            "B": 0,
+            "none": 4
+          },
+          "total_downtime_scenario_a_minutes": 0,
+          "avg_downtime_scenario_a_minutes": 0
+        }
+      },
+      "error": null
+    },
+    {
+      "test": "Admin - Dashboard Access",
+      "status": "PASS",
+      "timestamp": "2026-02-27T03:38:29.992943",
+      "response_data": {
+        "total_users": 5,
+        "total_tickets": 4,
+        "open_tickets": 4,
+        "closed_tickets": 0,
+        "total_service_points": 9,
+        "cctv_total": 2,
+        "cctv_open": 2,
+        "skpd_total": 2,
+        "skpd_open": 2,
+        "ip_speaker_total": 0,
+        "ip_speaker_open": 0,
+        "recent_tickets": [
+          {
+            "id": "TKT-20260227-0BA71C",
+            "title": "Test SKPD Internet Lambat",
+            "description": "Internet SKPD very slow, speedtest only 10 Mbps",
+            "service_type": "skpd",
+            "service_point_id": null,
+            "service_point_name": null,
+            "bandwidth": 0,
+            "location": "Test Location SKPD",
+            "priority": "medium",
+            "status": "open",
+            "initial_indication": "Internet Lambat",
+            "client_id": "ec54605c-0ff0-47bc-adb9-21dcbc876e3a",
+            "client_name": "Operator War Room Kominfo",
+            "assigned_to": null,
+            "assigned_name": null,
+            "photos": [],
+            "logbook": {
+              "phase1": {
+                "open_ticket_time": "2026-02-27T03:38:29.233505+00:00",
+                "initial_indication": "Internet Lambat",
+                "photos": []
+              }
+            },
+            "review": null,
+            "am_verified": false,
+            "scenario": null,
+            "final_status": null,
+            "created_at": "2026-02-27T03:38:29.233523+00:00",
+            "updated_at": "2026-02-27T03:38:29.233527+00:00",
+            "arrival_time": null,
+            "completion_time": null,
+            "closed_at": null,
+            "total_downtime_minutes": null,
+            "sla_deadline": "2026-02-27T07:38:29.233530+00:00"
+          },
+          {
+            "id": "TKT-20260227-6D23AB",
+            "title": "Test CCTV RTO Issue",
+            "description": "CCTV showing RTO when pinged from War Room",
+            "service_type": "cctv",
+            "service_point_id": null,
+            "service_point_name": null,
+            "bandwidth": 0,
+            "location": "Test Location CCTV",
+            "priority": "high",
+            "status": "open",
+            "initial_indication": "RTO",
+            "client_id": "ec54605c-0ff0-47bc-adb9-21dcbc876e3a",
+            "client_name": "Operator War Room Kominfo",
+            "assigned_to": null,
+            "assigned_name": null,
+            "photos": [],
+            "logbook": {
+              "phase1": {
+                "open_ticket_time": "2026-02-27T03:38:29.113895+00:00",
+                "initial_indication": "RTO",
+                "photos": []
+              }
+            },
+            "review": null,
+            "am_verified": false,
+            "scenario": null,
+            "final_status": null,
+            "created_at": "2026-02-27T03:38:29.113906+00:00",
+            "updated_at": "2026-02-27T03:38:29.113909+00:00",
+            "arrival_time": null,
+            "completion_time": null,
+            "closed_at": null,
+            "total_downtime_minutes": null,
+            "sla_deadline": "2026-02-27T07:38:29.113911+00:00"
+          },
+          {
+            "id": "TKT-20260227-7E9CC5",
+            "title": "Internet SKPD Lambat",
+            "description": "Koneksi internet di Dinas Kominfo sangat lambat, speedtest hanya 5 Mbps padahal kontrak 100 Mbps",
+            "service_type": "skpd",
+            "service_point_id": "dcbee915-f989-43d0-95a7-27f2ad307e31",
+            "service_point_name": "SKPD Dinas Kominfo",
+            "bandwidth": 100,
+            "location": "Balai Kota Lt. 9",
+            "priority": "medium",
+            "status": "open",
+            "initial_indication": "Internet Lambat",
+            "client_id": "ec54605c-0ff0-47bc-adb9-21dcbc876e3a",
+            "client_name": "Operator War Room Kominfo",
+            "assigned_to": null,
+            "assigned_name": null,
+            "photos": [],
+            "logbook": {
+              "phase1": {
+                "open_ticket_time": "2026-02-27T03:32:42.631469+00:00",
+                "initial_indication": "Internet Lambat",
+                "photos": []
+              }
+            },
+            "review": null,
+            "am_verified": false,
+            "scenario": null,
+            "final_status": null,
+            "created_at": "2026-02-27T03:32:42.631473+00:00",
+            "updated_at": "2026-02-27T03:32:42.631475+00:00",
+            "arrival_time": null,
+            "completion_time": null,
+            "closed_at": null,
+            "total_downtime_minutes": null,
+            "sla_deadline": "2026-02-27T07:32:42.631477+00:00"
+          },
+          {
+            "id": "TKT-20260227-B4BBEE",
+            "title": "CCTV Offline - RTO",
+            "description": "CCTV di Simpang 5 menampilkan RTO saat di-ping dari War Room",
+            "service_type": "cctv",
+            "service_point_id": "d7f54a01-04df-424e-9cb0-8df4f17a4789",
+            "service_point_name": "CCTV Simpang 5 Bandara",
+            "bandwidth": 10,
+            "location": "Simpang 5 Bandara",
+            "priority": "high",
+            "status": "open",
+            "initial_indication": "RTO",
+            "client_id": "ec54605c-0ff0-47bc-adb9-21dcbc876e3a",
+            "client_name": "Operator War Room Kominfo",
+            "assigned_to": null,
+            "assigned_name": null,
+            "photos": [],
+            "logbook": {
+              "phase1": {
+                "open_ticket_time": "2026-02-27T03:32:42.631421+00:00",
+                "initial_indication": "RTO",
+                "photos": []
+              }
+            },
+            "review": null,
+            "am_verified": false,
+            "scenario": null,
+            "final_status": null,
+            "created_at": "2026-02-27T03:32:42.631435+00:00",
+            "updated_at": "2026-02-27T03:32:42.631438+00:00",
+            "arrival_time": null,
+            "completion_time": null,
+            "closed_at": null,
+            "total_downtime_minutes": null,
+            "sla_deadline": "2026-02-27T07:32:42.631440+00:00"
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}

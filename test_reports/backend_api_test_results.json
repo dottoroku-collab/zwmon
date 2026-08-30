@@ -1,0 +1,483 @@
+{
+  "summary": {
+    "tests_run": 13,
+    "tests_passed": 12,
+    "success_rate": 92.3076923076923,
+    "timestamp": "2026-02-27T03:09:46.620535"
+  },
+  "results": [
+    {
+      "test": "Seed Initial Data",
+      "status": "PASS",
+      "timestamp": "2026-02-27T03:09:41.594192",
+      "response_data": {
+        "message": "Data sudah di-seed sebelumnya"
+      },
+      "error": null
+    },
+    {
+      "test": "Admin Login",
+      "status": "PASS",
+      "timestamp": "2026-02-27T03:09:42.141388",
+      "response_data": {
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNzUwZWU4M2MtOGE4Yy00MDMwLWJhYzgtNmRkNWMzMDcxM2ZiIiwicm9sZSI6ImFkbWluIiwiZXhwIjoxNzcyMjQ4MTgyfQ.a23fzSbNS27r81JHFbp42_U9Uw23bGQICSrGHizdXJE",
+        "user": {
+          "id": "750ee83c-8a8c-4030-bac8-6dd5c30713fb",
+          "username": "admin",
+          "email": "admin@telkom.co.id",
+          "role": "admin",
+          "full_name": "Administrator"
+        }
+      },
+      "error": null
+    },
+    {
+      "test": "AM Login",
+      "status": "PASS",
+      "timestamp": "2026-02-27T03:09:42.780149",
+      "response_data": {
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiYTVjYTliNTEtOTI4Ny00ZGIzLWExYjctOWQ1ZDNhYzQyMzYzIiwicm9sZSI6ImFtIiwiZXhwIjoxNzcyMjQ4MTgyfQ.BTQKjY5M3E40vy6JMAKbPqyoWn1SuNOo0pj0reOFq_U",
+        "user": {
+          "id": "a5ca9b51-9287-4db3-a1b7-9d5d3ac42363",
+          "username": "am_manager",
+          "email": "am@telkom.co.id",
+          "role": "am",
+          "full_name": "Account Manager"
+        }
+      },
+      "error": null
+    },
+    {
+      "test": "Helpdesk Login",
+      "status": "PASS",
+      "timestamp": "2026-02-27T03:09:43.296900",
+      "response_data": {
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNmQ0MTZkZDMtY2IxMi00ZjljLWI5YzItNzU3YjkxZjVkNWI3Iiwicm9sZSI6ImhlbHBkZXNrIiwiZXhwIjoxNzcyMjQ4MTgzfQ.DOI03kFR0UC702DGZV2unahXi6KEhW1o4DQtlsVoc-k",
+        "user": {
+          "id": "6d416dd3-cb12-4f9c-b9c2-757b91f5d5b7",
+          "username": "helpdesk1",
+          "email": "helpdesk@telkom.co.id",
+          "role": "helpdesk",
+          "full_name": "Helpdesk Operator"
+        }
+      },
+      "error": null
+    },
+    {
+      "test": "EOS Login",
+      "status": "PASS",
+      "timestamp": "2026-02-27T03:09:43.871822",
+      "response_data": {
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZjIxODRjYjQtYmI0ZS00NjhjLWEyMDctNzc1MzE3NjQ0MzJlIiwicm9sZSI6ImVvcyIsImV4cCI6MTc3MjI0ODE4M30.89aQ1E-IinF1zLn0sSoRQAYS2olHGPfAwIpP3g4m67Y",
+        "user": {
+          "id": "f2184cb4-bb4e-468c-a207-77531764432e",
+          "username": "eos_tech",
+          "email": "eos@telkom.co.id",
+          "role": "eos",
+          "full_name": "EOS Teknisi"
+        }
+      },
+      "error": null
+    },
+    {
+      "test": "Client Login",
+      "status": "PASS",
+      "timestamp": "2026-02-27T03:09:44.375197",
+      "response_data": {
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiY2JkYmY2OWMtMWNjYS00MzQ3LThjZGQtODFiZTYwZTg4Yzg3Iiwicm9sZSI6ImNsaWVudCIsImV4cCI6MTc3MjI0ODE4NH0.nw6p5swypyk_uEhUUty2rd9jZJMERep4KUlQCehpwUk",
+        "user": {
+          "id": "cbdbf69c-1cca-4347-8cdd-81be60e88c87",
+          "username": "client_kominfo",
+          "email": "client@kominfo.go.id",
+          "role": "client",
+          "full_name": "Dinas Kominfo"
+        }
+      },
+      "error": null
+    },
+    {
+      "test": "Get Users List",
+      "status": "PASS",
+      "timestamp": "2026-02-27T03:09:44.674969",
+      "response_data": {
+        "users": [
+          {
+            "username": "admin",
+            "email": "admin@telkom.co.id",
+            "role": "admin",
+            "full_name": "Administrator",
+            "phone": "081234567890",
+            "is_active": true,
+            "id": "750ee83c-8a8c-4030-bac8-6dd5c30713fb",
+            "created_at": "2026-02-27T03:06:05.756982+00:00"
+          },
+          {
+            "username": "am_manager",
+            "email": "am@telkom.co.id",
+            "role": "am",
+            "full_name": "Account Manager",
+            "phone": "081234567891",
+            "is_active": true,
+            "id": "a5ca9b51-9287-4db3-a1b7-9d5d3ac42363",
+            "created_at": "2026-02-27T03:06:05.831012+00:00"
+          },
+          {
+            "username": "helpdesk1",
+            "email": "helpdesk@telkom.co.id",
+            "role": "helpdesk",
+            "full_name": "Helpdesk Operator",
+            "phone": "081234567892",
+            "is_active": true,
+            "id": "6d416dd3-cb12-4f9c-b9c2-757b91f5d5b7",
+            "created_at": "2026-02-27T03:06:05.832821+00:00"
+          },
+          {
+            "username": "eos_tech",
+            "email": "eos@telkom.co.id",
+            "role": "eos",
+            "full_name": "EOS Teknisi",
+            "phone": "081234567893",
+            "is_active": true,
+            "id": "f2184cb4-bb4e-468c-a207-77531764432e",
+            "created_at": "2026-02-27T03:06:05.834410+00:00"
+          },
+          {
+            "username": "client_kominfo",
+            "email": "client@kominfo.go.id",
+            "role": "client",
+            "full_name": "Dinas Kominfo",
+            "phone": "081234567894",
+            "is_active": true,
+            "id": "cbdbf69c-1cca-4347-8cdd-81be60e88c87",
+            "created_at": "2026-02-27T03:06:05.835498+00:00"
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "test": "Create User",
+      "status": "PASS",
+      "timestamp": "2026-02-27T03:09:45.444819",
+      "response_data": {
+        "message": "User berhasil dibuat",
+        "user_id": "dcd7d4ba-750b-4ff9-a65b-72f6556ba947"
+      },
+      "error": null
+    },
+    {
+      "test": "Create Ticket",
+      "status": "FAIL",
+      "timestamp": "2026-02-27T03:09:45.760555",
+      "response_data": null,
+      "error": null
+    },
+    {
+      "test": "Get Tickets",
+      "status": "PASS",
+      "timestamp": "2026-02-27T03:09:45.976992",
+      "response_data": {
+        "tickets": [
+          {
+            "id": "TKT-20260227-84ED21",
+            "title": "Internet SKPD Lambat",
+            "description": "Koneksi internet di kantor sangat lambat, speedtest hanya 10 Mbps",
+            "service_type": "skpd",
+            "location": "Kantor Dinas Kominfo Lt. 2",
+            "priority": "medium",
+            "status": "closed",
+            "client_id": "cbdbf69c-1cca-4347-8cdd-81be60e88c87",
+            "client_name": "Dinas Kominfo",
+            "assigned_to": "f2184cb4-bb4e-468c-a207-77531764432e",
+            "assigned_name": "EOS Teknisi",
+            "photos": [],
+            "logbook": {
+              "ticket_id": "TKT-20260227-84ED21",
+              "service_type": "skpd",
+              "eos_id": "f2184cb4-bb4e-468c-a207-77531764432e",
+              "eos_name": "EOS Teknisi",
+              "entries": [
+                {
+                  "step": "Uji Bypass (Speedtest)",
+                  "description": "Speedtest berhasil, kecepatan 50 Mbps",
+                  "scenario": "",
+                  "photos": [],
+                  "timestamp": "2026-02-27T03:06:45.905910+00:00"
+                },
+                {
+                  "step": "Skenario Penanganan",
+                  "description": "Dilakukan reset router",
+                  "scenario": "A",
+                  "photos": [],
+                  "timestamp": "2026-02-27T03:06:45.905977+00:00"
+                },
+                {
+                  "step": "Upload Foto Bukti",
+                  "description": "Foto dokumentasi",
+                  "scenario": "",
+                  "photos": [
+                    "data:image/png;base64,test"
+                  ],
+                  "timestamp": "2026-02-27T03:06:45.905990+00:00"
+                }
+              ],
+              "notes": "Penanganan selesai",
+              "submitted_at": "2026-02-27T03:06:45.906004+00:00"
+            },
+            "review": {
+              "rating": 5,
+              "comment": "Penanganan sangat cepat dan profesional",
+              "client_id": "cbdbf69c-1cca-4347-8cdd-81be60e88c87",
+              "client_name": "Dinas Kominfo",
+              "submitted_at": "2026-02-27T03:06:53.354529+00:00"
+            },
+            "am_verified": true,
+            "created_at": "2026-02-27T03:06:05.837726+00:00",
+            "updated_at": "2026-02-27T03:06:59.855396+00:00",
+            "closed_at": "2026-02-27T03:06:59.855394+00:00",
+            "sla_deadline": "2026-02-28T03:06:05.837733+00:00",
+            "am_verified_at": "2026-02-27T03:06:59.855381+00:00",
+            "am_verified_by": "a5ca9b51-9287-4db3-a1b7-9d5d3ac42363"
+          },
+          {
+            "id": "TKT-20260227-AD8730",
+            "title": "CCTV Tidak Berfungsi di Titik A",
+            "description": "CCTV di Jl. Sudirman tidak menampilkan gambar sejak pagi",
+            "service_type": "cctv",
+            "location": "Jl. Sudirman No. 123",
+            "priority": "high",
+            "status": "open",
+            "client_id": "cbdbf69c-1cca-4347-8cdd-81be60e88c87",
+            "client_name": "Dinas Kominfo",
+            "assigned_to": null,
+            "assigned_name": null,
+            "photos": [],
+            "logbook": null,
+            "review": null,
+            "am_verified": false,
+            "created_at": "2026-02-27T03:06:05.837665+00:00",
+            "updated_at": "2026-02-27T03:06:05.837686+00:00",
+            "closed_at": null,
+            "sla_deadline": "2026-02-28T03:06:05.837690+00:00"
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "test": "Dashboard Stats",
+      "status": "PASS",
+      "timestamp": "2026-02-27T03:09:46.168221",
+      "response_data": {
+        "total_users": 6,
+        "total_tickets": 2,
+        "open_tickets": 1,
+        "closed_tickets": 1,
+        "recent_tickets": [
+          {
+            "id": "TKT-20260227-84ED21",
+            "title": "Internet SKPD Lambat",
+            "description": "Koneksi internet di kantor sangat lambat, speedtest hanya 10 Mbps",
+            "service_type": "skpd",
+            "location": "Kantor Dinas Kominfo Lt. 2",
+            "priority": "medium",
+            "status": "closed",
+            "client_id": "cbdbf69c-1cca-4347-8cdd-81be60e88c87",
+            "client_name": "Dinas Kominfo",
+            "assigned_to": "f2184cb4-bb4e-468c-a207-77531764432e",
+            "assigned_name": "EOS Teknisi",
+            "photos": [],
+            "logbook": {
+              "ticket_id": "TKT-20260227-84ED21",
+              "service_type": "skpd",
+              "eos_id": "f2184cb4-bb4e-468c-a207-77531764432e",
+              "eos_name": "EOS Teknisi",
+              "entries": [
+                {
+                  "step": "Uji Bypass (Speedtest)",
+                  "description": "Speedtest berhasil, kecepatan 50 Mbps",
+                  "scenario": "",
+                  "photos": [],
+                  "timestamp": "2026-02-27T03:06:45.905910+00:00"
+                },
+                {
+                  "step": "Skenario Penanganan",
+                  "description": "Dilakukan reset router",
+                  "scenario": "A",
+                  "photos": [],
+                  "timestamp": "2026-02-27T03:06:45.905977+00:00"
+                },
+                {
+                  "step": "Upload Foto Bukti",
+                  "description": "Foto dokumentasi",
+                  "scenario": "",
+                  "photos": [
+                    "data:image/png;base64,test"
+                  ],
+                  "timestamp": "2026-02-27T03:06:45.905990+00:00"
+                }
+              ],
+              "notes": "Penanganan selesai",
+              "submitted_at": "2026-02-27T03:06:45.906004+00:00"
+            },
+            "review": {
+              "rating": 5,
+              "comment": "Penanganan sangat cepat dan profesional",
+              "client_id": "cbdbf69c-1cca-4347-8cdd-81be60e88c87",
+              "client_name": "Dinas Kominfo",
+              "submitted_at": "2026-02-27T03:06:53.354529+00:00"
+            },
+            "am_verified": true,
+            "created_at": "2026-02-27T03:06:05.837726+00:00",
+            "updated_at": "2026-02-27T03:06:59.855396+00:00",
+            "closed_at": "2026-02-27T03:06:59.855394+00:00",
+            "sla_deadline": "2026-02-28T03:06:05.837733+00:00",
+            "am_verified_at": "2026-02-27T03:06:59.855381+00:00",
+            "am_verified_by": "a5ca9b51-9287-4db3-a1b7-9d5d3ac42363"
+          },
+          {
+            "id": "TKT-20260227-AD8730",
+            "title": "CCTV Tidak Berfungsi di Titik A",
+            "description": "CCTV di Jl. Sudirman tidak menampilkan gambar sejak pagi",
+            "service_type": "cctv",
+            "location": "Jl. Sudirman No. 123",
+            "priority": "high",
+            "status": "open",
+            "client_id": "cbdbf69c-1cca-4347-8cdd-81be60e88c87",
+            "client_name": "Dinas Kominfo",
+            "assigned_to": null,
+            "assigned_name": null,
+            "photos": [],
+            "logbook": null,
+            "review": null,
+            "am_verified": false,
+            "created_at": "2026-02-27T03:06:05.837665+00:00",
+            "updated_at": "2026-02-27T03:06:05.837686+00:00",
+            "closed_at": null,
+            "sla_deadline": "2026-02-28T03:06:05.837690+00:00"
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "test": "Settings Access",
+      "status": "PASS",
+      "timestamp": "2026-02-27T03:09:46.348220",
+      "response_data": {
+        "settings": {
+          "contract_cctv": "500000000",
+          "contract_skpd": "800000000",
+          "contract_ip_speaker": "200000000",
+          "telegram_token": "",
+          "telegram_chat_ids": ""
+        }
+      },
+      "error": null
+    },
+    {
+      "test": "Reports Access",
+      "status": "PASS",
+      "timestamp": "2026-02-27T03:09:46.617737",
+      "response_data": {
+        "tickets": [
+          {
+            "id": "TKT-20260227-84ED21",
+            "title": "Internet SKPD Lambat",
+            "description": "Koneksi internet di kantor sangat lambat, speedtest hanya 10 Mbps",
+            "service_type": "skpd",
+            "location": "Kantor Dinas Kominfo Lt. 2",
+            "priority": "medium",
+            "status": "closed",
+            "client_id": "cbdbf69c-1cca-4347-8cdd-81be60e88c87",
+            "client_name": "Dinas Kominfo",
+            "assigned_to": "f2184cb4-bb4e-468c-a207-77531764432e",
+            "assigned_name": "EOS Teknisi",
+            "photos": [],
+            "logbook": {
+              "ticket_id": "TKT-20260227-84ED21",
+              "service_type": "skpd",
+              "eos_id": "f2184cb4-bb4e-468c-a207-77531764432e",
+              "eos_name": "EOS Teknisi",
+              "entries": [
+                {
+                  "step": "Uji Bypass (Speedtest)",
+                  "description": "Speedtest berhasil, kecepatan 50 Mbps",
+                  "scenario": "",
+                  "photos": [],
+                  "timestamp": "2026-02-27T03:06:45.905910+00:00"
+                },
+                {
+                  "step": "Skenario Penanganan",
+                  "description": "Dilakukan reset router",
+                  "scenario": "A",
+                  "photos": [],
+                  "timestamp": "2026-02-27T03:06:45.905977+00:00"
+                },
+                {
+                  "step": "Upload Foto Bukti",
+                  "description": "Foto dokumentasi",
+                  "scenario": "",
+                  "photos": [
+                    "data:image/png;base64,test"
+                  ],
+                  "timestamp": "2026-02-27T03:06:45.905990+00:00"
+                }
+              ],
+              "notes": "Penanganan selesai",
+              "submitted_at": "2026-02-27T03:06:45.906004+00:00"
+            },
+            "review": {
+              "rating": 5,
+              "comment": "Penanganan sangat cepat dan profesional",
+              "client_id": "cbdbf69c-1cca-4347-8cdd-81be60e88c87",
+              "client_name": "Dinas Kominfo",
+              "submitted_at": "2026-02-27T03:06:53.354529+00:00"
+            },
+            "am_verified": true,
+            "created_at": "2026-02-27T03:06:05.837726+00:00",
+            "updated_at": "2026-02-27T03:06:59.855396+00:00",
+            "closed_at": "2026-02-27T03:06:59.855394+00:00",
+            "sla_deadline": "2026-02-28T03:06:05.837733+00:00",
+            "am_verified_at": "2026-02-27T03:06:59.855381+00:00",
+            "am_verified_by": "a5ca9b51-9287-4db3-a1b7-9d5d3ac42363"
+          },
+          {
+            "id": "TKT-20260227-AD8730",
+            "title": "CCTV Tidak Berfungsi di Titik A",
+            "description": "CCTV di Jl. Sudirman tidak menampilkan gambar sejak pagi",
+            "service_type": "cctv",
+            "location": "Jl. Sudirman No. 123",
+            "priority": "high",
+            "status": "open",
+            "client_id": "cbdbf69c-1cca-4347-8cdd-81be60e88c87",
+            "client_name": "Dinas Kominfo",
+            "assigned_to": null,
+            "assigned_name": null,
+            "photos": [],
+            "logbook": null,
+            "review": null,
+            "am_verified": false,
+            "created_at": "2026-02-27T03:06:05.837665+00:00",
+            "updated_at": "2026-02-27T03:06:05.837686+00:00",
+            "closed_at": null,
+            "sla_deadline": "2026-02-28T03:06:05.837690+00:00"
+          }
+        ],
+        "statistics": {
+          "total": 2,
+          "by_status": {
+            "closed": 1,
+            "open": 1
+          },
+          "by_service": {
+            "skpd": 1,
+            "cctv": 1
+          },
+          "avg_resolution_hours": 0.02
+        }
+      },
+      "error": null
+    }
+  ]
+}
