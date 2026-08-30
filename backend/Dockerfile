@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y \
     libsm6 \
     libxext6 \
     libturbojpeg0 \
+    iputils-ping \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
