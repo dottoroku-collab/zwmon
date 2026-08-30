@@ -2,14 +2,11 @@ version: '3.8'
 
 services:
   mongodb:
-    image: mongo:6
+    image: mongo:4.4
     container_name: zwmon_mongodb
     restart: always
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=zwmon_user
-      - MONGO_INITDB_ROOT_PASSWORD=PasswordAndalan2026
     volumes:
-      - mongo_data:/data/db
+      - /var/lib/mongo:/data/db
     ports:
       - "127.0.0.1:27017:27017" # Only expose to localhost for safety
 
@@ -32,5 +29,4 @@ services:
       - ./backend:/app
       - /app/venv # Prevent overriding container venv
 
-volumes:
-  mongo_data:
+
