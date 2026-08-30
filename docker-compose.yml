@@ -21,7 +21,9 @@ services:
       - MONGO_URL=mongodb://zwmon_user:PasswordAndalan2026@mongodb:27017/zwmon_db
       - DB_NAME=zwmon_db
       - TZ=Asia/Makassar
-      - MEDIAMTX_API_URL=http://172.17.0.1:9997
+      - MEDIAMTX_API_URL=http://host.docker.internal:9997
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "5000:5000"
     depends_on:
