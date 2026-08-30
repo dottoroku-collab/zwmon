@@ -2917,7 +2917,7 @@ async def sync_mediamtx_config():
                     payload = {"source": rtsp_url, "sourceOnDemand": True}
                     await client.post(f"{mediamtx_api}/v3/config/paths/add/{point_id}", json=payload)
                 except Exception as e:
-                    logger.error(f"Gagal sync MediaMTX path untuk {point_id}: {e}")
+                    import traceback; logger.error(f"Gagal sync MediaMTX path {point_id}: {traceback.format_exc()}")
     except Exception as e:
         logger.error(f"MediaMTX sync error: {e}")
 
@@ -3647,6 +3647,29 @@ async def get_online_users(user: dict = Depends(get_current_user)):
         })
     
     return {"total_online": len(online_data), "users": online_data}
+
+@api_router.post("/seed")
+async def seed_database():
+    try:
+        # Hapus koleksi yang ada
+        for coll in ["users", "tickets", "chats", "logbook", "service_points", "settings"]:
+            await db[coll].delete_many({})
+        
+        # Buat user default
+        default_users = [
+            {"id": str(uuid.uuid4()), "full_name": "Admin System", "email": "admin@telkom.co.id", "password": hash_password("admin123"), "role": "admin", "created_at": datetime.utcnow().isoformat()},
+            {"id": str(uuid.uuid4()), "full_name": "AM Telkom", "email": "am@telkom.co.id", "password": hash_password("am123"), "role": "am", "created_at": datetime.utcnow().isoformat()},
+            {"id": str(uuid.uuid4()), "full_name": "Helpdesk BGES", "email": "helpdesk@telkom.co.id", "password": hash_password("helpdesk123"), "role": "helpdesk", "created_at": datetime.utcnow().isoformat()},
+            {"id": str(uuid.uuid4()), "full_name": "EOS Team", "email": "eos@telkom.co.id", "password": hash_password("eos123"), "role": "eos", "created_at": datetime.utcnow().isoformat()},
+            {"id": str(uuid.uuid4()), "full_name": "Klien Warroom", "email": "warroom@kominfo.go.id", "password": hash_password("warroom123"), "role": "client", "created_at": datetime.utcnow().isoformat()}
+        ]
+        await db.users.insert_many(default_users)
+        
+        return {"status": "success", "message": "Database seeded"}
+    except Exception as e:
+        logger.error(f"Seed error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 app.include_router(api_router)
 
 @app.on_event("startup")

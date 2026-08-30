@@ -8,7 +8,7 @@ services:
     volumes:
       - /var/lib/mongo:/data/db
     ports:
-      - "127.0.0.1:27017:27017" # Only expose to localhost for safety
+      - "127.0.0.1:27017:27017"
 
   backend:
     build:
@@ -22,25 +22,26 @@ services:
       - DB_NAME=zwmon_db
       - TZ=Asia/Makassar
       - MEDIAMTX_API_URL=http://mediamtx:9997
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     ports:
       - "5000:5000"
     depends_on:
       - mongodb
     volumes:
       - ./backend:/app
-      - /app/venv # Prevent overriding container venv
+      - /app/venv
 
   mediamtx:
     image: bluenviron/mediamtx:latest
     container_name: zwmon_mediamtx
     restart: always
+    ports:
+      - "9997:9997"
+      - "127.0.0.1:8889:8889"
+      - "8189:8189/udp"
     environment:
       - MTX_WEBRTCADDITIONALHOSTS=103.151.20.98
       - MTX_API=yes
       - MTX_APIADDRESS=:9997
-    ports:
-      - "8889:8889"
-      - "8189:8189/udp"
-      - "127.0.0.1:9997:9997"
+      - MTX_WEBRTCADDRESS=0.0.0.0:8889
+    volumes:
+      - ./mediamtx.yml:/mediamtx.yml
