@@ -2912,9 +2912,10 @@ async def sync_mediamtx_config():
                 rtsp_url = f"rtsp://{user}:{pw}@{ip}:554{rtsp_path}"
                 
                 # Tambah/Update path di MediaMTX via REST API (Port 9997)
+                mediamtx_api = os.getenv("MEDIAMTX_API_URL", "http://172.17.0.1:9997")
                 try:
                     payload = {"source": rtsp_url, "sourceOnDemand": True}
-                    await client.post(f"http://zwmon_mediamtx:9997/v3/config/paths/add/{point_id}", json=payload)
+                    await client.post(f"{mediamtx_api}/v3/config/paths/add/{point_id}", json=payload)
                 except Exception as e:
                     logger.error(f"Gagal sync MediaMTX path untuk {point_id}: {e}")
     except Exception as e:
