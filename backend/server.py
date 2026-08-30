@@ -18,7 +18,7 @@ import base64
 import httpx
 import io
 import json
-import cv2
+
 import asyncio
 import time
 from fastapi.staticfiles import StaticFiles
@@ -32,8 +32,7 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.graphics.shapes import Drawing
 from reportlab.graphics.charts.piecharts import Pie
-from turbojpeg import TurboJPEG
-#jpeg = TurboJPEG() # Inisialisasi TurboJPEG kalau sudah install
+
 from fastapi import BackgroundTasks
 from fastapi.responses import FileResponse
 from starlette.background import BackgroundTask
