@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Video, List, MonitorOff, RefreshCw, Maximize, AlertCircle, Grid, Square, Search } from 'lucide-react';
 import { useApp } from '../context/AppContext'; 
-import WebRTCPlayer from './WebRTCPlayer';
+import WebRTCPlayer from '../components/WebRTCPlayer';
 
 const API_BASE_URL = "https://zwmon.com/api"; 
 
