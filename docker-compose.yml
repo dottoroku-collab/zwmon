@@ -21,6 +21,7 @@ services:
     restart: always
     environment:
       - MONGO_URL=mongodb://zwmon_user:PasswordAndalan2026@mongodb:27017/zwmon_db?authSource=admin
+      - DB_NAME=zwmon_db
       - TZ=Asia/Makassar
     ports:
       - "5000:5000"
