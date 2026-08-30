@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Video, List, MonitorOff, RefreshCw, Maximize, AlertCircle, Grid, Square, Search } from 'lucide-react';
 import { useApp } from '../context/AppContext'; 
+import WebRTCPlayer from './WebRTCPlayer';
 
 const API_BASE_URL = "https://zwmon.com/api"; 
-const STREAM_BASE_URL = "https://zwmon.com/api/cctv/stream";
 
 const LiveCCTVPage = () => {
   const { theme } = useApp(); 
@@ -247,20 +247,17 @@ const LiveCCTVPage = () => {
                           <span className="text-sm">Menghubungkan ke RTSP...</span>
                         </div>
                       )}
-                      <img
-                        key={streamKey}
-                        src={`${STREAM_BASE_URL}/${activeCam.id}?token=${token}&t=${streamKey}`}
-                        className="w-full h-full object-contain bg-black"
-                        alt="CCTV Stream"
-                        onLoad={() => setStreamLoading(false)}
-                        onError={() => {
-                          // PERBAIKAN 2: Auto reconnect kalau stream mati (timeout 5 detik)
+                      <WebRTCPlayer 
+                        streamId={activeCam.id}
+                        token={token}
+                        isGrid={false}
+                        onError={(e) => {
                           setStreamLoading(false);
                           setStreamError(true);
                           setTimeout(() => {
                             setStreamError(false);
                             setStreamLoading(true);
-                            setStreamKey(Date.now()); // Paksa refresh URL
+                            setStreamKey(Date.now());
                           }, 5000); 
                         }}
                       />
@@ -299,19 +296,12 @@ const LiveCCTVPage = () => {
                         
                         {cam ? (
                           <>
-                            <img
-                              src={`${STREAM_BASE_URL}/${cam.id}?token=${token}&t=${streamKey + index}`}
-                              className="w-full h-full object-cover"
-                              alt={`Stream ${cam.name}`}
+                            <WebRTCPlayer 
+                              streamId={cam.id}
+                              token={token}
+                              isGrid={true}
                               onError={(e) => {
-                                // Auto Reconnect untuk 9 Layar
-                                e.target.style.opacity = '0.3';
-                                setTimeout(() => {
-                                  if(e.target) {
-                                    e.target.src = `${STREAM_BASE_URL}/${cam.id}?token=${token}&t=${Date.now()}`;
-                                    e.target.style.opacity = '1';
-                                  }
-                                }, 6000); // Reconnect tiap 6 detik kalau putus
+                                // Auto Reconnect untuk 9 Layar handled mostly internally by WebRTC
                               }}
                             />
                             <div className="absolute inset-0 hidden flex-col items-center justify-center text-rose-500 bg-slate-950">

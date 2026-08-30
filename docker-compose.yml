@@ -29,4 +29,8 @@ services:
       - ./backend:/app
       - /app/venv # Prevent overriding container venv
 
-
+  mediamtx:
+    image: bluenviron/mediamtx:latest
+    container_name: zwmon_mediamtx
+    restart: always
+    network_mode: host

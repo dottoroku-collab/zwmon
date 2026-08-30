@@ -2884,77 +2884,56 @@ async def get_cctv_list(user: dict = Depends(get_current_user)):
     return {"cctv_list": results}
 
 
-# --- FUNGSI GENERATE FRAMES KITA TARUH DI LUAR AGAR TIDAK ERROR / NULL ---
-# --- FUNGSI GENERATE FRAMES KITA TARUH DI LUAR AGAR TIDAK ERROR / NULL ---
-def generate_frames(point_data):
-    import os
-    import cv2
-    import time
-
-    user = point_data.get('cctv_username', 'admin')
-    pw = point_data.get('cctv_password', '')
-    ip = point_data.get('ip_address', '')
-    brand = point_data.get('cctv_brand', 'hikvision').lower()
-
-    # Sesuaikan format RTSP berdasarkan merek kamera Boska!
-    if brand == 'hikvision':
-        rtsp_path = "/Streaming/Channels/102" # Substream Hikvision
-    elif brand == 'samsung' or brand == 'hanwha':
-        rtsp_path = "/profile2/media.smp" # Substream Samsung/Wisenet
-    elif brand == 'avigilon':
-        rtsp_path = "/defaultSecondary?streamType=u" # Substream Avigilon
-    elif brand == 'dahua':
-        rtsp_path = "/cam/realmonitor?channel=1&subtype=1" # Substream Dahua (Jaga-jaga kalau ada)
-    else:
-        rtsp_path = "/Streaming/Channels/102" # Default balek ke Hikvision
-
-    # Gabungkan jadi URL utuh
-    rtsp_url = f"rtsp://{user}:{pw}@{ip}:554{rtsp_path}"
-
-    os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = "rtsp_transport;tcp"
-    cap = cv2.VideoCapture(rtsp_url)
-    cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-
-    fps_limit = 1/5  # Kita turunkan ke 5 FPS saja Boska, biar makin enteng
-    last_time = 0
-
+async def sync_mediamtx_config():
+    """Sync all CCTV RTSP URLs to MediaMTX paths"""
     try:
-        while True:
-            current_time = time.time()
-            success, frame = cap.read()
-            
-            if not success:
-                time.sleep(2)
-                cap.open(rtsp_url)
-                continue
+        import httpx
+        async with httpx.AsyncClient() as client:
+            cctvs = await db.service_points.find({"service_type": "cctv"}).to_list(None)
+            for point_data in cctvs:
+                point_id = point_data.get('id')
+                ip = point_data.get('ip_address', '')
+                if not ip: continue
+                
+                user = point_data.get('cctv_username', 'admin')
+                pw = point_data.get('cctv_password', '')
+                brand = point_data.get('cctv_brand', 'hikvision').lower()
 
-            if (current_time - last_time) > fps_limit:
-                # Resize ke resolusi sangat kecil untuk dashboard (Thumbnail mode)
-                frame = cv2.resize(frame, (640, 360)) 
-                
-                # Pakai OpenCV biasa tapi quality-nya kita hajar ke 30 (Sangat Ringan)
-                ret, buffer = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 30])
-                
-                if ret:
-                    yield (b'--frame\r\n'
-                           b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
-                
-                last_time = current_time
-            
-            # Kasih nafas CPU lebih lama
-            time.sleep(0.05) 
+                if brand == 'hikvision':
+                    rtsp_path = "/Streaming/Channels/102"
+                elif brand == 'samsung' or brand == 'hanwha':
+                    rtsp_path = "/profile2/media.smp"
+                elif brand == 'avigilon':
+                    rtsp_path = "/defaultSecondary?streamType=u"
+                elif brand == 'dahua':
+                    rtsp_path = "/cam/realmonitor?channel=1&subtype=1"
+                else:
+                    rtsp_path = "/Streaming/Channels/102"
 
-    finally:
-        cap.release()
+                rtsp_url = f"rtsp://{user}:{pw}@{ip}:554{rtsp_path}"
+                
+                # Tambah/Update path di MediaMTX via REST API (Port 9997)
+                try:
+                    payload = {"source": rtsp_url, "sourceOnDemand": True}
+                    await client.post(f"http://zwmon_mediamtx:9997/v3/config/paths/add/{point_id}", json=payload)
+                except Exception as e:
+                    logger.error(f"Gagal sync MediaMTX path untuk {point_id}: {e}")
+    except Exception as e:
+        logger.error(f"MediaMTX sync error: {e}")
+
+@api_router.post("/cctv/sync")
+async def trigger_cctv_sync(background_tasks: BackgroundTasks, token: str = Depends(get_current_user)):
+    background_tasks.add_task(sync_mediamtx_config)
+    return {"message": "Sync MediaMTX dipicu di background"}
 
 @api_router.get("/cctv/stream/{point_id}")
 async def cctv_stream(point_id: str, token: str = Query(None)):
     sp = await db.service_points.find_one({"id": point_id, "service_type": "cctv"})
     if not sp or not sp.get("ip_address"):
-        raise HTTPException(status_code=404, detail="CCTV tidak ditemukan atau IP kosong")
-        
-    # --- HARUS DI-RETURN PAKAI STREAMING RESPONSE ---
-    return StreamingResponse(generate_frames(sp), media_type="multipart/x-mixed-replace; boundary=frame", headers={"X-Accel-Buffering": "no"})
+        raise HTTPException(status_code=404, detail="CCTV tidak ditemukan")
+    
+    # Klien frontend kini akan memanggil langsung endpoint WebRTC MediaMTX (/webrtc/{point_id})
+    return {"message": "Gunakan MediaMTX WebRTC API untuk streaming", "point_id": point_id}
 
 
 # ============ SLA COMPLIANCE TRACKING ============
@@ -3683,6 +3662,7 @@ async def startup_event():
     await db.tickets.create_index([("assigned_to", 1)])
     
     asyncio.create_task(_ping_scheduler())
+    asyncio.create_task(sync_mediamtx_config())
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
