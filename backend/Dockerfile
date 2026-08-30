@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y \
     ffmpeg \
     libsm6 \
     libxext6 \
+    libturbojpeg0 \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
