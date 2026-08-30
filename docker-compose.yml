@@ -19,6 +19,7 @@ services:
       dockerfile: Dockerfile
     container_name: zwmon_backend
     restart: always
+    env_file: .env
     environment:
       - MONGO_URL=mongodb://zwmon_user:PasswordAndalan2026@mongodb:27017/zwmon_db?authSource=admin
       - DB_NAME=zwmon_db
