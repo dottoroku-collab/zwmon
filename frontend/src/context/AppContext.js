@@ -261,6 +261,7 @@ export const AppProvider = ({ children }) => {
     createUser: (data) => axios.post(`${API}/users`, data),
     updateUser: (id, data) => axios.put(`${API}/users/${id}`, data),
     deleteUser: (id) => axios.delete(`${API}/users/${id}`),
+    resetUserPassword: (id, data) => axios.put(`${API}/users/${id}/reset-password`, data),
     getEosUsers: () => axios.get(`${API}/users/eos`),
     getMe: () => axios.get(`${API}/auth/me`),
     getTickets: () => axios.get(`${API}/tickets`),

@@ -11,7 +11,8 @@ import {
   Loader2,
   X,
   Eye,
-  EyeOff
+  EyeOff,
+  Key
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -67,9 +68,11 @@ const UserManagementPage = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showResetDialog, setShowResetDialog] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [resetPasswordInput, setResetPasswordInput] = useState('');
 
   // Form state
   const [formData, setFormData] = useState({
@@ -135,6 +138,13 @@ const UserManagementPage = () => {
     setShowDeleteDialog(true);
   };
 
+  const openResetDialog = (user) => {
+    setSelectedUser(user);
+    setResetPasswordInput('');
+    setShowPassword(false);
+    setShowResetDialog(true);
+  };
+
   const handleAddUser = async (e) => {
     e.preventDefault();
     if (!formData.username || !formData.email || !formData.password) {
@@ -190,6 +200,26 @@ const UserManagementPage = () => {
       fetchUsers();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Gagal menghapus user');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    if (!resetPasswordInput) {
+      toast.error('Password baru tidak boleh kosong');
+      return;
+    }
+    
+    setSubmitting(true);
+    try {
+      await api.resetUserPassword(selectedUser.id, { new_password: resetPasswordInput });
+      toast.success('Password berhasil direset');
+      setShowResetDialog(false);
+      setSelectedUser(null);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Gagal mereset password');
     } finally {
       setSubmitting(false);
     }
@@ -319,6 +349,15 @@ const UserManagementPage = () => {
                     <Button
                       variant="ghost"
                       size="sm"
+                      onClick={() => openResetDialog(user)}
+                      className="text-slate-400 hover:text-emerald-400"
+                      title="Reset Password"
+                    >
+                      <Key className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => openEditModal(user)}
                       className="text-slate-400 hover:text-cyan-400"
                       data-testid={`edit-user-${user.id}`}
@@ -364,6 +403,9 @@ const UserManagementPage = () => {
                       {user.is_active !== false ? 'Aktif' : 'Nonaktif'}
                     </span>
                     <div className="flex items-center gap-2">
+                      <Button variant="ghost" size="sm" onClick={() => openResetDialog(user)} title="Reset Password">
+                        <Key className="w-4 h-4" />
+                      </Button>
                       <Button variant="ghost" size="sm" onClick={() => openEditModal(user)}>
                         <Edit2 className="w-4 h-4" />
                       </Button>
@@ -616,6 +658,60 @@ const UserManagementPage = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Reset Password Modal */}
+      <Dialog open={showResetDialog} onOpenChange={setShowResetDialog}>
+        <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Key className="w-5 h-5 text-emerald-400" />
+              Reset Password User
+            </DialogTitle>
+          </DialogHeader>
+          <div className="text-sm text-slate-400 mb-4">
+            Reset password untuk user <strong className="text-white">{selectedUser?.full_name || selectedUser?.username}</strong>.
+          </div>
+          <form onSubmit={handleResetPassword} className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-slate-300">Password Baru *</Label>
+              <div className="relative">
+                <Input
+                  type={showPassword ? 'text' : 'password'}
+                  value={resetPasswordInput}
+                  onChange={(e) => setResetPasswordInput(e.target.value)}
+                  className="input-dark h-11 text-white pr-10"
+                  placeholder="Masukkan password baru"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+            <div className="flex gap-3 pt-4">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setShowResetDialog(false)}
+                className="flex-1 border-slate-700"
+              >
+                Batal
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={submitting}
+                className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+              >
+                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Simpan Password'}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
