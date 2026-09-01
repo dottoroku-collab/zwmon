@@ -3917,6 +3917,11 @@ async def seed_database():
         # for coll in ["users", "tickets", "chats", "logbook", "service_points", "settings"]:
         #     await db[coll].delete_many({})
 
+        # Cek apakah sudah pernah di-seed
+        existing_admin = await db.users.find_one({"email": "admin@telkom.co.id"})
+        if existing_admin:
+            return {"status": "success", "message": "Database already seeded"}
+
         # Buat user default
         default_users = [
             {"id": str(uuid.uuid4()), "full_name": "Admin System", "email": "admin@telkom.co.id", "password": hash_password("admin123"), "role": "admin", "created_at": datetime.utcnow().isoformat()},
