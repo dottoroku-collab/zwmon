@@ -196,10 +196,15 @@ const UserManagementPage = () => {
   };
 
   const filteredUsers = users.filter(user => {
+    const searchLower = searchQuery.toLowerCase();
+    const username = user.username || '';
+    const email = user.email || '';
+    const fullName = user.full_name || '';
+    
     const matchesSearch = 
-      user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (user.full_name && user.full_name.toLowerCase().includes(searchQuery.toLowerCase()));
+      username.toLowerCase().includes(searchLower) ||
+      email.toLowerCase().includes(searchLower) ||
+      fullName.toLowerCase().includes(searchLower);
     const matchesRole = roleFilter === 'all' || user.role === roleFilter;
     return matchesSearch && matchesRole;
   });
@@ -285,12 +290,12 @@ const UserManagementPage = () => {
                   <div className="col-span-3 flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center">
                       <span className="text-white font-medium">
-                        {user.full_name?.charAt(0) || user.username.charAt(0).toUpperCase()}
+                        {user.full_name?.charAt(0)?.toUpperCase() || (user.username && user.username.charAt(0).toUpperCase()) || '?'}
                       </span>
                     </div>
                     <div>
-                      <p className="text-white font-medium">{user.full_name || user.username}</p>
-                      <p className="text-xs text-slate-500">@{user.username}</p>
+                      <p className="text-white font-medium">{user.full_name || user.username || 'Tanpa Nama'}</p>
+                      <p className="text-xs text-slate-500">{user.username ? `@${user.username}` : user.email}</p>
                     </div>
                   </div>
                   <div className="col-span-3 text-sm text-slate-300 truncate">
@@ -338,11 +343,11 @@ const UserManagementPage = () => {
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center">
                         <span className="text-white font-medium">
-                          {user.full_name?.charAt(0) || user.username.charAt(0).toUpperCase()}
+                          {user.full_name?.charAt(0)?.toUpperCase() || (user.username && user.username.charAt(0).toUpperCase()) || '?'}
                         </span>
                       </div>
                       <div>
-                        <p className="text-white font-medium">{user.full_name || user.username}</p>
+                        <p className="text-white font-medium">{user.full_name || user.username || 'Tanpa Nama'}</p>
                         <p className="text-xs text-slate-500">{user.email}</p>
                       </div>
                     </div>

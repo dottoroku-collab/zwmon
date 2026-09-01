@@ -18,7 +18,9 @@ import LogbookPage from './pages/LogbookPage';
 import ServicePointsPage from './pages/ServicePointsPage';
 import ProfilePage from './pages/ProfilePage';
 import ChatPage from './pages/ChatPage';
-import LiveCCTVPage from './pages/LiveCCTVPage'; // 1. Tambahkan import ini
+import LiveCCTVPage from './pages/LiveCCTVPage'; 
+import TaskManagerPage from './pages/TaskManagerPage';
+
 import Layout from './components/Layout';
 import './App.css';
 
@@ -152,6 +154,11 @@ const AppRoutes = () => {
       <Route path="/chat" element={
         <ProtectedRoute>
           <ChatPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/tasks" element={
+        <ProtectedRoute>
+          <TaskManagerPage />
         </ProtectedRoute>
       } />
       

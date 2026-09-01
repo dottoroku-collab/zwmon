@@ -19,20 +19,6 @@ const AuthPage = () => {
     password: '',
   });
 
-  // Seed data on first load
-  useEffect(() => {
-    const seedInitialData = async () => {
-      try {
-        setSeeding(true);
-        await api.seedData();
-      } catch (error) {
-        // Data already seeded
-      } finally {
-        setSeeding(false);
-      }
-    };
-    seedInitialData();
-  }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });

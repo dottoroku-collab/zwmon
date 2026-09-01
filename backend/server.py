@@ -278,6 +278,20 @@ class ChatMessage(BaseModel):
     to_user_id: str
     message: str
 
+class TaskCreate(BaseModel):
+    title: str
+    description: str
+    assignee_id: str
+    sla_hours: int = 12
+
+class TaskStatusUpdate(BaseModel):
+    status: str
+
+class TaskLogCreate(BaseModel):
+    action: str
+    message: str
+    photo_url: Optional[str] = None
+
 class RestitutionCalc(BaseModel):
     service_type: str
     service_point_id: Optional[str] = None
@@ -2926,17 +2940,26 @@ async def sync_mediamtx_config():
 
                 try:
                     if codec in ['hevc', 'h265']:
-                        raw_payload = {"source": rtsp_url, "sourceOnDemand": True}
+                        raw_payload = {
+                            "source": rtsp_url, 
+                            "sourceOnDemand": True,
+                            "rtspTransport": "tcp"
+                        }
                         await client.post(f"{mediamtx_api}/v3/config/paths/add/{point_id}_raw", json=raw_payload)
                         
                         transcode_payload = {
                             "source": "publisher",
                             "runOnDemand": f"ffmpeg -rtsp_transport tcp -i rtsp://localhost:8554/{point_id}_raw -c:v libx264 -preset veryfast -b:v 500k -c:a copy -f rtsp rtsp://localhost:8554/{point_id}",
-                            "runOnDemandRestart": True
+                            "runOnDemandRestart": True,
+                            "runOnDemandStartTimeout": "25s"
                         }
                         await client.post(f"{mediamtx_api}/v3/config/paths/add/{point_id}", json=transcode_payload)
                     else:
-                        payload = {"source": rtsp_url, "sourceOnDemand": True}
+                        payload = {
+                            "source": rtsp_url, 
+                            "sourceOnDemand": True,
+                            "rtspTransport": "tcp"
+                        }
                         await client.post(f"{mediamtx_api}/v3/config/paths/add/{point_id}", json=payload)
                 except Exception as e:
                     import traceback; logger.error(f"Gagal sync MediaMTX path {point_id}: {traceback.format_exc()}")
@@ -3693,6 +3716,172 @@ async def fix_old_tickets(user: dict = Depends(get_current_user)):
         "message": "Pembersihan Data Selesai! Data manual Skenario A tetap utuh.", 
         "tiket_diperbaiki": updated_count
     }
+
+# ==========================================
+# TASK MANAGEMENT
+# ==========================================
+
+@api_router.post("/tasks")
+async def create_task(task: TaskCreate, user: dict = Depends(get_current_user)):
+    if user['role'] not in ['admin', 'am']:
+        raise HTTPException(status_code=403, detail="Hanya AM atau Admin yang dapat membuat task")
+    
+    now_wita = await get_now_local()
+    
+    # Cek apakah assignee ada
+    assignee = await db.users.find_one({"id": task.assignee_id})
+    if not assignee:
+        raise HTTPException(status_code=404, detail="Assignee tidak ditemukan")
+        
+    new_task = {
+        "id": str(uuid.uuid4()),
+        "title": task.title,
+        "description": task.description,
+        "assigner_id": user['id'],
+        "assigner_name": user.get('full_name') or user.get('username') or 'Unknown',
+        "assignee_id": assignee['id'],
+        "assignee_name": assignee.get('full_name') or assignee.get('username') or 'Unknown',
+        "status": "todo",
+        "sla_hours": task.sla_hours,
+        "last_updated_at": now_wita.isoformat(),
+        "created_at": now_wita.isoformat()
+    }
+    
+    await db.tasks.insert_one(new_task)
+    new_task.pop('_id', None)
+    
+    # Kirim notif WS
+    await ws_manager.send_personal_message({"type": "NEW_TASK", "data": new_task}, assignee['id'])
+    return new_task
+
+@api_router.get("/tasks")
+async def get_tasks(user: dict = Depends(get_current_user)):
+    # Admin/AM melihat semua
+    # EOS/Helpdesk melihat milik sendiri
+    query = {}
+    if user['role'] not in ['admin', 'am']:
+        query = {"assignee_id": user['id']}
+        
+    tasks_cursor = db.tasks.find(query).sort("created_at", -1)
+    tasks = await tasks_cursor.to_list(length=1000)
+    
+    now_wita = await get_now_local()
+    # Hitung overdue flag
+    for t in tasks:
+        t.pop('_id', None)
+        last_update = datetime.fromisoformat(t['last_updated_at'].replace('Z', '+00:00')) if t.get('last_updated_at') else datetime.fromisoformat(t['created_at'].replace('Z', '+00:00'))
+        if t['status'] != 'done':
+            diff_hours = (now_wita - last_update).total_seconds() / 3600
+            t['is_overdue'] = diff_hours > t.get('sla_hours', 12)
+        else:
+            t['is_overdue'] = False
+            
+    return tasks
+
+@api_router.get("/tasks/{task_id}")
+async def get_task_detail(task_id: str, user: dict = Depends(get_current_user)):
+    task = await db.tasks.find_one({"id": task_id}, {"_id": 0})
+    if not task:
+        raise HTTPException(status_code=404, detail="Task tidak ditemukan")
+    if user['role'] not in ['admin', 'am'] and task['assignee_id'] != user['id']:
+        raise HTTPException(status_code=403, detail="Akses ditolak")
+        
+    now_wita = await get_now_local()
+    last_update = datetime.fromisoformat(task['last_updated_at'].replace('Z', '+00:00')) if task.get('last_updated_at') else datetime.fromisoformat(task['created_at'].replace('Z', '+00:00'))
+    if task['status'] != 'done':
+        diff_hours = (now_wita - last_update).total_seconds() / 3600
+        task['is_overdue'] = diff_hours > task.get('sla_hours', 12)
+    else:
+        task['is_overdue'] = False
+    return task
+
+@api_router.put("/tasks/{task_id}/status")
+async def update_task_status(task_id: str, status_update: TaskStatusUpdate, user: dict = Depends(get_current_user)):
+    task = await db.tasks.find_one({"id": task_id})
+    if not task:
+        raise HTTPException(status_code=404, detail="Task tidak ditemukan")
+        
+    if user['role'] not in ['admin', 'am'] and task['assignee_id'] != user['id']:
+        raise HTTPException(status_code=403, detail="Tidak ada akses")
+        
+    now_wita = await get_now_local()
+    await db.tasks.update_one(
+        {"id": task_id},
+        {"$set": {"status": status_update.status, "last_updated_at": now_wita.isoformat()}}
+    )
+    
+    # log event
+    log = {
+        "id": str(uuid.uuid4()),
+        "task_id": task_id,
+        "user_id": user['id'],
+        "user_name": user.get('full_name') or user.get('username') or 'Unknown',
+        "action": "change_status",
+        "message": f"Status diubah menjadi {status_update.status}",
+        "photo_url": None,
+        "created_at": now_wita.isoformat()
+    }
+    await db.task_logs.insert_one(log)
+    
+    return {"message": "Status updated"}
+
+@api_router.post("/tasks/{task_id}/logs")
+async def add_task_log(task_id: str, log_create: TaskLogCreate, user: dict = Depends(get_current_user)):
+    task = await db.tasks.find_one({"id": task_id})
+    if not task:
+        raise HTTPException(status_code=404, detail="Task tidak ditemukan")
+        
+    now_wita = await get_now_local()
+    log = {
+        "id": str(uuid.uuid4()),
+        "task_id": task_id,
+        "user_id": user['id'],
+        "user_name": user.get('full_name') or user.get('username') or 'Unknown',
+        "action": log_create.action,
+        "message": log_create.message,
+        "photo_url": log_create.photo_url,
+        "created_at": now_wita.isoformat()
+    }
+    await db.task_logs.insert_one(log)
+    
+    # Update last_updated_at dan status jika report blocker atau progress
+    updates = {"last_updated_at": now_wita.isoformat()}
+    if log_create.action == "report_blocker":
+        updates["status"] = "blocked"
+        
+    await db.tasks.update_one(
+        {"id": task_id},
+        {"$set": updates}
+    )
+    
+    log.pop('_id', None)
+    return log
+
+@api_router.get("/tasks/{task_id}/logs")
+async def get_task_logs(task_id: str, user: dict = Depends(get_current_user)):
+    task = await db.tasks.find_one({"id": task_id})
+    if not task:
+        raise HTTPException(status_code=404, detail="Task tidak ditemukan")
+    if user['role'] not in ['admin', 'am'] and task['assignee_id'] != user['id']:
+        raise HTTPException(status_code=403, detail="Akses ditolak")
+
+    logs_cursor = db.task_logs.find({"task_id": task_id}).sort("created_at", 1)
+    logs = await logs_cursor.to_list(length=100)
+    for l in logs:
+        l.pop('_id', None)
+    return logs
+
+@api_router.delete("/tasks/{task_id}")
+async def delete_task(task_id: str, user: dict = Depends(get_current_user)):
+    if user['role'] not in ['admin', 'am']:
+        raise HTTPException(status_code=403, detail="Hanya AM atau Admin yang dapat menghapus task")
+    
+    result = await db.tasks.delete_one({"id": task_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Task tidak ditemukan")
+    
+    await db.task_logs.delete_many({"task_id": task_id})
+    return {"message": "Task berhasil dihapus"}
 
 # ============ ROOT ============
 
