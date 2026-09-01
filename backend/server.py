@@ -2897,6 +2897,7 @@ async def sync_mediamtx_config():
                 user = point_data.get('cctv_username', 'admin')
                 pw = point_data.get('cctv_password', '')
                 brand = point_data.get('cctv_brand', 'hikvision').lower()
+                codec = point_data.get('video_codec', 'h264').lower()
 
                 if brand == 'hikvision':
                     rtsp_path = "/Streaming/Channels/102"
@@ -2909,21 +2910,91 @@ async def sync_mediamtx_config():
                 else:
                     rtsp_path = "/Streaming/Channels/102"
 
-                rtsp_url = f"rtsp://{user}:{pw}@{ip}:554{rtsp_path}"
+                if pw:
+                    rtsp_url = f"rtsp://{user}:{pw}@{ip}:554{rtsp_path}"
+                else:
+                    rtsp_url = f"rtsp://{ip}:554{rtsp_path}"
                 
                 # Tambah/Update path di MediaMTX via REST API (Port 9997)
                 mediamtx_api = os.getenv("MEDIAMTX_API_URL", "http://mediamtx:9997")
                 try:
-                    payload = {"source": rtsp_url, "sourceOnDemand": True}
-                    await client.post(f"{mediamtx_api}/v3/config/paths/add/{point_id}", json=payload)
+                    # Hapus config lama jika ada
+                    await client.delete(f"{mediamtx_api}/v3/config/paths/delete/{point_id}")
+                    await client.delete(f"{mediamtx_api}/v3/config/paths/delete/{point_id}_raw")
+                except:
+                    pass
+
+                try:
+                    if codec in ['hevc', 'h265']:
+                        raw_payload = {"source": rtsp_url, "sourceOnDemand": True}
+                        await client.post(f"{mediamtx_api}/v3/config/paths/add/{point_id}_raw", json=raw_payload)
+                        
+                        transcode_payload = {
+                            "source": "publisher",
+                            "runOnDemand": f"ffmpeg -rtsp_transport tcp -i rtsp://localhost:8554/{point_id}_raw -c:v libx264 -preset veryfast -b:v 500k -c:a copy -f rtsp rtsp://localhost:8554/{point_id}",
+                            "runOnDemandRestart": True
+                        }
+                        await client.post(f"{mediamtx_api}/v3/config/paths/add/{point_id}", json=transcode_payload)
+                    else:
+                        payload = {"source": rtsp_url, "sourceOnDemand": True}
+                        await client.post(f"{mediamtx_api}/v3/config/paths/add/{point_id}", json=payload)
                 except Exception as e:
                     import traceback; logger.error(f"Gagal sync MediaMTX path {point_id}: {traceback.format_exc()}")
     except Exception as e:
         logger.error(f"MediaMTX sync error: {e}")
 
+async def detect_cctv_codecs():
+    """Probe missing video codecs for all CCTVs in background."""
+    try:
+        import httpx
+        cctvs = await db.service_points.find({"service_type": "cctv", "video_codec": {"$exists": False}}).to_list(None)
+        for point_data in cctvs:
+            point_id = point_data.get('id')
+            ip = point_data.get('ip_address', '')
+            if not ip: continue
+            
+            user = point_data.get('cctv_username', 'admin')
+            pw = point_data.get('cctv_password', '')
+            brand = point_data.get('cctv_brand', 'hikvision').lower()
+
+            if brand == 'hikvision':
+                rtsp_path = "/Streaming/Channels/102"
+            else:
+                rtsp_path = "/Streaming/Channels/102"
+
+            if pw:
+                rtsp_url = f"rtsp://{user}:{pw}@{ip}:554{rtsp_path}"
+            else:
+                rtsp_url = f"rtsp://{ip}:554{rtsp_path}"
+            
+            try:
+                import asyncio
+                # timeout set by asyncio wait_for
+                cmd = ['ffprobe', '-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=codec_name', '-of', 'default=noprint_wrappers=1:nokey=1', rtsp_url]
+                process = await asyncio.create_subprocess_exec(
+                    *cmd,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE
+                )
+                try:
+                    stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=8.0)
+                    codec = stdout.decode().strip()
+                    if codec:
+                        await db.service_points.update_one({"id": point_id}, {"$set": {"video_codec": codec}})
+                        # We just trigger a full sync to make it simple
+                        asyncio.create_task(sync_mediamtx_config())
+                except asyncio.TimeoutError:
+                    process.kill()
+            except Exception as e:
+                pass
+            await asyncio.sleep(0.5)
+    except Exception as e:
+        logger.error(f"detect codec error: {e}")
+
 @api_router.post("/cctv/sync")
 async def trigger_cctv_sync(background_tasks: BackgroundTasks, token: str = Depends(get_current_user)):
     background_tasks.add_task(sync_mediamtx_config)
+    background_tasks.add_task(detect_cctv_codecs)
     return {"message": "Sync MediaMTX dipicu di background"}
 
 @api_router.get("/cctv/stream/{point_id}")
@@ -3652,9 +3723,9 @@ async def get_online_users(user: dict = Depends(get_current_user)):
 async def seed_database():
     try:
         # Hapus koleksi yang ada
-        for coll in ["users", "tickets", "chats", "logbook", "service_points", "settings"]:
-            await db[coll].delete_many({})
-        
+        # for coll in ["users", "tickets", "chats", "logbook", "service_points", "settings"]:
+        #     await db[coll].delete_many({})
+
         # Buat user default
         default_users = [
             {"id": str(uuid.uuid4()), "full_name": "Admin System", "email": "admin@telkom.co.id", "password": hash_password("admin123"), "role": "admin", "created_at": datetime.utcnow().isoformat()},
@@ -3686,6 +3757,7 @@ async def startup_event():
     
     asyncio.create_task(_ping_scheduler())
     asyncio.create_task(sync_mediamtx_config())
+    asyncio.create_task(detect_cctv_codecs())
 
 @app.on_event("shutdown")
 async def shutdown_db_client():

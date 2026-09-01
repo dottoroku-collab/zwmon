@@ -18,12 +18,12 @@ services:
     restart: always
     env_file: .env
     environment:
-      - MONGO_URL=mongodb://zwmon_user:PasswordAndalan2026@mongodb:27017/zwmon_db
+      - MONGO_URL=mongodb://mongodb:27017/zwmon_db
       - DB_NAME=zwmon_db
       - TZ=Asia/Makassar
       - MEDIAMTX_API_URL=http://mediamtx:9997
     ports:
-      - "5000:5000"
+      - "127.0.0.1:5000:5000"
     depends_on:
       - mongodb
     volumes:
@@ -31,17 +31,28 @@ services:
       - /app/venv
 
   mediamtx:
-    image: bluenviron/mediamtx:latest
+    image: bluenviron/mediamtx:latest-ffmpeg
     container_name: zwmon_mediamtx
     restart: always
     ports:
-      - "9997:9997"
-      - "127.0.0.1:8889:8889"
-      - "8189:8189/udp"
+      - "127.0.0.1:9998:9997"
+      - "127.0.0.1:8890:8889"
+      - "8190:8189/udp"
     environment:
-      - MTX_WEBRTCADDITIONALHOSTS=103.151.20.98
+      - MTX_WEBRTCADDITIONALHOSTS=103.151.20.74
       - MTX_API=yes
       - MTX_APIADDRESS=:9997
       - MTX_WEBRTCADDRESS=0.0.0.0:8889
     volumes:
       - ./mediamtx.yml:/mediamtx.yml
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: zwmon_frontend
+    restart: always
+    ports:
+      - "3005:80"
+    depends_on:
+      - backend
