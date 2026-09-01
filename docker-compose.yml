@@ -23,7 +23,7 @@ services:
       - TZ=Asia/Makassar
       - MEDIAMTX_API_URL=http://mediamtx:9997
     ports:
-      - "127.0.0.1:5000:5000"
+      - "5000:5000"
     depends_on:
       - mongodb
     volumes:
