@@ -197,8 +197,7 @@ export default function TaskManagerPage() {
   };
 
   return (
-    <Layout>
-      <div className="space-y-6 animate-fade-in h-full flex flex-col">
+    <div className="space-y-6 animate-fade-in h-full flex flex-col">
 
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -394,6 +393,5 @@ export default function TaskManagerPage() {
         </div>
       )}
     </div>
-    </Layout>
   );
 }
