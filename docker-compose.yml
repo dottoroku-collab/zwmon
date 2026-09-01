@@ -41,8 +41,11 @@ services:
       - "127.0.0.1:9998:9997"
       - "127.0.0.1:8890:8889"
       - "8190:8190/udp"
+      - "8190:8190/tcp"
     environment:
       - MTX_WEBRTCADDITIONALHOSTS=103.151.20.74
+      - MTX_WEBRTCLOCALUDPADDRESS=:8190
+      - MTX_WEBRTCLOCALTCPADDRESS=:8190
       - MTX_API=yes
       - MTX_APIADDRESS=:9997
       - MTX_WEBRTCADDRESS=0.0.0.0:8889
