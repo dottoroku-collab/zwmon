@@ -138,11 +138,13 @@ export default function TaskManagerPage() {
     }
   };
 
-  const renderKanbanBoard = () => {
+  const [expandedMobileColumn, setExpandedMobileColumn] = useState('todo');
+
+  const renderDesktopBoard = () => {
     return (
-      <div className="flex gap-4 overflow-x-auto pb-4 flex-1 min-h-0 snap-x snap-mandatory hide-scrollbar">
+      <div className="hidden sm:flex gap-4 overflow-x-auto pb-4 flex-1 min-h-0 snap-x snap-mandatory hide-scrollbar">
         {COLUMNS.map(column => (
-          <div key={column.id} className="min-w-[85vw] sm:min-w-[300px] w-[85vw] sm:w-[300px] flex flex-col glass-card rounded-xl overflow-hidden snap-center max-h-full">
+          <div key={column.id} className="min-w-[300px] w-[300px] flex flex-col glass-card rounded-xl overflow-hidden snap-center max-h-full">
             <div className={`${column.color} p-3 flex justify-between items-center shrink-0`}>
               <h3 className="font-semibold text-white">{column.title}</h3>
               <Badge variant="secondary" className="bg-black/20 text-white border-0">
@@ -196,6 +198,85 @@ export default function TaskManagerPage() {
     );
   };
 
+  const renderMobileBoard = () => {
+    return (
+      <div className="flex sm:hidden flex-col gap-3 pb-24 overflow-y-auto flex-1 min-h-0">
+        {COLUMNS.map(column => {
+          const columnTasks = tasks.filter(t => t.status === column.id);
+          const isExpanded = expandedMobileColumn === column.id;
+          
+          return (
+            <div key={column.id} className="glass-card rounded-xl overflow-hidden flex flex-col shrink-0">
+              <div 
+                className={`${column.color} p-4 flex justify-between items-center cursor-pointer`}
+                onClick={() => setExpandedMobileColumn(isExpanded ? null : column.id)}
+              >
+                <div className="flex items-center gap-3">
+                  <h3 className="font-semibold text-white text-lg">{column.title}</h3>
+                  <Badge variant="secondary" className="bg-black/20 text-white border-0">
+                    {columnTasks.length}
+                  </Badge>
+                </div>
+                <div className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>
+                  <svg className="w-5 h-5 text-white/80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+              
+              {isExpanded && (
+                <div className="p-3 space-y-3 bg-slate-900/50">
+                  {columnTasks.length === 0 ? (
+                    <p className="text-center text-slate-500 py-6 text-sm">Belum ada tugas di status ini</p>
+                  ) : (
+                    columnTasks.map(task => (
+                      <div 
+                        key={task.id}
+                        onClick={() => openTaskDetail(task)}
+                        className={`bg-slate-800 p-4 rounded-lg border cursor-pointer hover:border-blue-500 transition-colors shadow-sm ${task.is_overdue ? 'border-red-500 animate-pulse-slow' : 'border-slate-700'}`}
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <h4 className="font-medium text-white text-sm line-clamp-2 pr-2">{task.title}</h4>
+                          {isManager && (
+                            <select 
+                              onClick={(e) => e.stopPropagation()}
+                              value={task.status}
+                              onChange={(e) => handleStatusChange(task.id, e.target.value)}
+                              className="bg-slate-900 text-xs text-slate-300 border border-slate-700 rounded p-1 flex-shrink-0"
+                            >
+                              {COLUMNS.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+                            </select>
+                          )}
+                        </div>
+                        
+                        <div className="flex items-center gap-2 mb-3">
+                          <User className="w-3 h-3 text-slate-400" />
+                          <span className="text-xs text-slate-400 truncate">{task.assignee_name}</span>
+                        </div>
+
+                        <div className="flex items-center justify-between text-xs">
+                          {task.is_overdue ? (
+                            <span className="text-red-400 flex items-center font-medium bg-red-400/10 px-2 py-1 rounded">
+                              <AlertCircle className="w-3 h-3 mr-1" /> Overdue
+                            </span>
+                          ) : (
+                            <span className="text-emerald-400 flex items-center bg-emerald-400/10 px-2 py-1 rounded">
+                              <Clock className="w-3 h-3 mr-1" /> {task.sla_hours}h SLA
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   return (
     <div className="animate-fade-in h-full flex flex-col px-2 sm:px-0 relative max-h-screen sm:max-h-full pb-20 sm:pb-0">
 
@@ -221,7 +302,10 @@ export default function TaskManagerPage() {
           <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
       ) : (
-        renderKanbanBoard()
+        <>
+          {renderDesktopBoard()}
+          {renderMobileBoard()}
+        </>
       )}
 
       {/* Mobile FAB for Create Task */}
