@@ -23,7 +23,10 @@ services:
       - TZ=Asia/Makassar
       - MEDIAMTX_API_URL=http://mediamtx:9997
     ports:
-      - "5000:5000"
+      - "127.0.0.1:5000:5000"
+    networks:
+      - default
+      - proxy-network
     depends_on:
       - mongodb
     volumes:
@@ -53,6 +56,14 @@ services:
     container_name: zwmon_frontend
     restart: always
     ports:
-      - "3005:80"
+      - "127.0.0.1:3005:80"
+    networks:
+      - default
+      - proxy-network
     depends_on:
       - backend
+
+networks:
+  default:
+  proxy-network:
+    external: true
