@@ -191,6 +191,9 @@ class UserUpdate(BaseModel):
     phone: Optional[str] = None
     is_active: Optional[bool] = None
 
+class PasswordReset(BaseModel):
+    new_password: str
+
 class TicketCreate(BaseModel):
     title: str
     description: str
@@ -826,6 +829,18 @@ async def update_user(user_id: str, update: UserUpdate, user: dict = Depends(get
         raise HTTPException(status_code=404, detail="User tidak ditemukan")
     
     return {"message": "User berhasil diupdate"}
+
+@api_router.put("/users/{user_id}/reset-password")
+async def reset_password(user_id: str, data: PasswordReset, user: dict = Depends(get_current_user)):
+    if user['role'] != 'admin':
+        raise HTTPException(status_code=403, detail="Hanya admin yang dapat mereset password")
+    
+    hashed_password = hash_password(data.new_password)
+    result = await db.users.update_one({"id": user_id}, {"$set": {"password": hashed_password}})
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="User tidak ditemukan")
+    
+    return {"message": "Password berhasil direset"}
 
 @api_router.delete("/users/{user_id}")
 async def delete_user(user_id: str, user: dict = Depends(get_current_user)):
