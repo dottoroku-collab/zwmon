@@ -142,9 +142,9 @@ export default function TaskManagerPage() {
 
   const renderDesktopBoard = () => {
     return (
-      <div className="hidden sm:flex gap-4 overflow-x-auto pb-4 flex-1 min-h-0 snap-x snap-mandatory hide-scrollbar">
+      <div className="hidden sm:grid grid-cols-5 gap-4 pb-4 flex-1 min-h-0">
         {COLUMNS.map(column => (
-          <div key={column.id} className="min-w-[300px] w-[300px] flex flex-col glass-card rounded-xl overflow-hidden snap-center max-h-full">
+          <div key={column.id} className="flex flex-col glass-card rounded-xl overflow-hidden max-h-full">
             <div className={`${column.color} p-3 flex justify-between items-center shrink-0`}>
               <h3 className="font-semibold text-white">{column.title}</h3>
               <Badge variant="secondary" className="bg-black/20 text-white border-0">
