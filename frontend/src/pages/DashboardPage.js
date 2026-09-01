@@ -48,7 +48,8 @@ const DashboardPage = () => {
   const fetchOnlineUsersSafely = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/admin/who-is-online', {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
+      const res = await fetch(`${backendUrl}/api/admin/who-is-online`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
