@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { MonitorOff } from 'lucide-react';
 
-const WebRTCPlayer = ({ streamId, token, onError, isGrid }) => {
+const WebRTCPlayer = ({ streamId, token, onError, onPlaying, isGrid }) => {
   const videoRef = useRef(null);
   const pcRef = useRef(null);
 
@@ -29,7 +29,7 @@ const WebRTCPlayer = ({ streamId, token, onError, isGrid }) => {
         await pc.setLocalDescription(offer);
 
         // This assumes Nginx proxies /webrtc to MediaMTX port 8889
-        const response = await fetch(`https://zwmon.com/webrtc/${streamId}/webrtc`, {
+        const response = await fetch(`https://zwmon.com/webrtc/${streamId}/whep`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/sdp'
@@ -71,6 +71,7 @@ const WebRTCPlayer = ({ streamId, token, onError, isGrid }) => {
       muted
       className={`w-full h-full ${isGrid ? 'object-cover' : 'object-contain'} bg-black`}
       onError={(e) => onError && onError(e)}
+      onPlaying={() => onPlaying && onPlaying()}
     />
   );
 };
