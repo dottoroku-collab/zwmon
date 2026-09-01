@@ -3,10 +3,8 @@ import { Video, List, MonitorOff, RefreshCw, Maximize, AlertCircle, Grid, Square
 import { useApp } from '../context/AppContext'; 
 import WebRTCPlayer from '../components/WebRTCPlayer';
 
-const API_BASE_URL = "https://zwmon.com/api"; 
-
 const LiveCCTVPage = () => {
-  const { theme } = useApp(); 
+  const { theme, api } = useApp(); 
   const isDark = theme === 'dark'; 
   
   const [cameras, setCameras] = useState([]);
@@ -28,10 +26,8 @@ const LiveCCTVPage = () => {
 
   const fetchCameras = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/cctv/list`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await response.json();
+      const response = await api.get('/cctv/list');
+      const data = response.data;
       const camList = data.cctv_list || [];
       setCameras(camList);
       
@@ -248,16 +244,30 @@ const LiveCCTVPage = () => {
                         </div>
                       )}
                       <WebRTCPlayer 
+                        key={streamKey}
                         streamId={activeCam.id}
                         token={token}
                         isGrid={false}
+                        onPlaying={() => setStreamLoading(false)}
                         onError={(e) => {
+                          if (e?.message?.includes("WebRTC Negotiation Failed")) {
+                            console.error(`Gagal menghubungkan ke kamera ${activeCam.name} (Offline)`);
+                          }
                           setStreamLoading(false);
                           setStreamError(true);
+                          
+                          // Gunakan variable id agar setTimeout tidak menimpa state kamera lain yang baru diklik
+                          const failedCamId = activeCam.id;
                           setTimeout(() => {
-                            setStreamError(false);
-                            setStreamLoading(true);
-                            setStreamKey(Date.now());
+                            setActiveCam(currentCam => {
+                              // Hanya reload jika kamera aktif saat ini masih sama dengan yang gagal
+                              if (currentCam && currentCam.id === failedCamId) {
+                                setStreamError(false);
+                                setStreamLoading(true);
+                                setStreamKey(Date.now());
+                              }
+                              return currentCam;
+                            });
                           }, 5000); 
                         }}
                       />
