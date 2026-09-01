@@ -3750,8 +3750,10 @@ async def create_task(task: TaskCreate, user: dict = Depends(get_current_user)):
     await db.tasks.insert_one(new_task)
     new_task.pop('_id', None)
     
-    # Kirim notif WS
-    await ws_manager.send_personal_message({"type": "NEW_TASK", "data": new_task}, assignee['id'])
+    try:
+        await ws_manager.send_to_user(assignee['id'], {"type": "NEW_TASK", "data": new_task})
+    except Exception as e:
+        logger.error(f"Gagal kirim notif ke {assignee['id']}")
     return new_task
 
 @api_router.get("/tasks")
