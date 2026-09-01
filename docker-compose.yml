@@ -40,7 +40,7 @@ services:
     ports:
       - "127.0.0.1:9998:9997"
       - "127.0.0.1:8890:8889"
-      - "8190:8189/udp"
+      - "8189:8189/udp"
     environment:
       - MTX_WEBRTCADDITIONALHOSTS=103.151.20.74
       - MTX_API=yes
