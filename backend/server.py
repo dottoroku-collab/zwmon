@@ -781,8 +781,8 @@ async def delete_conversation(other_user_id: str, user: dict = Depends(get_curre
 
 @api_router.get("/users")
 async def get_users(user: dict = Depends(get_current_user)):
-    if user['role'] != 'admin':
-        raise HTTPException(status_code=403, detail="Hanya admin yang dapat mengakses")
+    if user['role'] not in ['admin', 'am']:
+        raise HTTPException(status_code=403, detail="Hanya admin dan AM yang dapat mengakses")
     
     users = await db.users.find({}, {"_id": 0, "password": 0}).sort("created_at", -1).to_list(200)
     return {"users": users}

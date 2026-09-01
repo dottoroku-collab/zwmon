@@ -62,7 +62,8 @@ export default function TaskManagerPage() {
     if (isManager) {
       try {
         const res = await api.get('/users');
-        const staff = res.data.filter(u => ['eos', 'admin', 'helpdesk'].includes(u.role));
+        const userList = res.data.users || res.data;
+        const staff = userList.filter(u => ['eos', 'admin', 'helpdesk'].includes(u.role));
         setUsers(staff);
       } catch (err) {
         console.error('Failed to fetch users:', err);
