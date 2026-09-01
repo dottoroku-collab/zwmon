@@ -225,6 +225,31 @@ export const AppProvider = ({ children }) => {
                 new Notification("Pesan ZWMON", { body: `${senderName}: ${chatMsg}` });
               }
             }
+            else if (data.type === 'TASK_UPDATE') {
+              playZWMONAlert();
+              const actionLabels = {
+                'report_blocker': 'Terdapat Kendala pada',
+                'request_review': 'Tugas Selesai (Menunggu Review)',
+                'update_progress': 'Progress Update pada',
+                'mark_done': 'Tugas Selesai Direview'
+              };
+              const actionLabel = actionLabels[data.action] || 'Update pada';
+              
+              toast.info(`${actionLabel} Task`, { description: 'Cek Task Management untuk detailnya.' });
+              
+              addNotification({ 
+                type: 'info', 
+                message: `${actionLabel} Task`,
+                link: `/tasks`
+              });
+
+              if (Notification.permission === "granted") {
+                new Notification("ZWMON Task Update", { body: `${actionLabel} Task` });
+              }
+              
+              // Trigger local event for TaskManagerPage to refresh
+              window.dispatchEvent(new Event('task_updated'));
+            }
           } catch (err) { 
             console.error("Gagal memproses pesan WebSocket", err);
           }

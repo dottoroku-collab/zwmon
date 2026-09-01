@@ -3766,9 +3766,14 @@ async def create_task(task: TaskCreate, user: dict = Depends(get_current_user)):
     new_task.pop('_id', None)
     
     try:
-        await ws_manager.send_to_user(assignee['id'], {"type": "NEW_TASK", "data": new_task})
+        await ws_manager.send_to_user(assignee['id'], {"type": "TASK_UPDATE", "data": new_task})
     except Exception as e:
         logger.error(f"Gagal kirim notif ke {assignee['id']}")
+        
+    # Kirim Telegram Notification
+    telegram_msg = f"<b>Penugasan Baru!</b>\nTugas: {task.title}\nDitugaskan kepada: <b>{new_task['assignee_name']}</b>\nOleh: {new_task['assigner_name']}\n\nSilakan cek di Task Management ZWMON ya!"
+    await send_telegram_notification(telegram_msg)
+        
     return new_task
 
 @api_router.get("/tasks")
@@ -3820,21 +3825,35 @@ async def update_task_status(task_id: str, status_update: TaskStatusUpdate, user
         
     if user['role'] not in ['admin', 'am'] and task['assignee_id'] != user['id']:
         raise HTTPException(status_code=403, detail="Tidak ada akses")
+    
+    # Hanya AM/Admin yang bisa set status Done
+    if status_update.status == 'done' and user['role'] not in ['admin', 'am']:
+        raise HTTPException(status_code=403, detail="Hanya AM atau Admin yang dapat menandai task sebagai Done")
         
     now_wita = await get_now_local()
+    
+    # Jika AM/Admin set status selain done, reset unread flag
+    task_updates = {"status": status_update.status, "last_updated_at": now_wita.isoformat()}
+    if user['role'] in ['admin', 'am']:
+        task_updates["has_unread_update"] = False
+    
     await db.tasks.update_one(
         {"id": task_id},
-        {"$set": {"status": status_update.status, "last_updated_at": now_wita.isoformat()}}
+        {"$set": task_updates}
     )
     
     # log event
+    status_labels = {
+        "todo": "To Do", "in_progress": "In Progress", "blocked": "Kendala",
+        "review": "Review", "done": "Selesai"
+    }
     log = {
         "id": str(uuid.uuid4()),
         "task_id": task_id,
         "user_id": user['id'],
         "user_name": user.get('full_name') or user.get('username') or 'Unknown',
         "action": "change_status",
-        "message": f"Status diubah menjadi {status_update.status}",
+        "message": f"Status diubah menjadi {status_labels.get(status_update.status, status_update.status)}",
         "photo_url": None,
         "created_at": now_wita.isoformat()
     }
@@ -3842,11 +3861,29 @@ async def update_task_status(task_id: str, status_update: TaskStatusUpdate, user
     
     return {"message": "Status updated"}
 
+@api_router.put("/tasks/{task_id}/mark-read")
+async def mark_task_read(task_id: str, user: dict = Depends(get_current_user)):
+    """AM/Admin buka task detail → tandai semua update sudah dibaca"""
+    if user['role'] not in ['admin', 'am']:
+        raise HTTPException(status_code=403, detail="Akses ditolak")
+    task = await db.tasks.find_one({"id": task_id})
+    if not task:
+        raise HTTPException(status_code=404, detail="Task tidak ditemukan")
+    await db.tasks.update_one(
+        {"id": task_id},
+        {"$set": {"has_unread_update": False}}
+    )
+    return {"message": "Marked as read"}
+
 @api_router.post("/tasks/{task_id}/logs")
 async def add_task_log(task_id: str, log_create: TaskLogCreate, user: dict = Depends(get_current_user)):
     task = await db.tasks.find_one({"id": task_id})
     if not task:
         raise HTTPException(status_code=404, detail="Task tidak ditemukan")
+    
+    # Staff tidak bisa update task yang sudah Done
+    if task.get('status') == 'done' and user['role'] not in ['admin', 'am']:
+        raise HTTPException(status_code=403, detail="Task sudah selesai, tidak bisa diupdate")
         
     now_wita = await get_now_local()
     log = {
@@ -3861,15 +3898,81 @@ async def add_task_log(task_id: str, log_create: TaskLogCreate, user: dict = Dep
     }
     await db.task_logs.insert_one(log)
     
-    # Update last_updated_at dan status jika report blocker atau progress
+    # Logika otomatis transisi status berdasarkan action dan role
+    current_status = task.get('status', 'todo')
     updates = {"last_updated_at": now_wita.isoformat()}
+    
+    is_manager = user['role'] in ['admin', 'am']
+    
     if log_create.action == "report_blocker":
+        # Staff laporkan kendala → pindah ke blocked, tandai unread untuk AM
         updates["status"] = "blocked"
+        if not is_manager:
+            updates["has_unread_update"] = True
+    
+    elif log_create.action == "request_review":
+        # Staff klik "Tandai Selesai" → pindah ke Review, tandai unread
+        updates["status"] = "review"
+        if not is_manager:
+            updates["has_unread_update"] = True
+    
+    elif log_create.action == "update_progress":
+        if is_manager:
+            # AM/Admin tulis feedback → task kembali ke in_progress, reset unread
+            if current_status in ['review', 'done', 'blocked']:
+                updates["status"] = "in_progress"
+            updates["has_unread_update"] = False
+        else:
+            # Staff beri update progress → pindah ke in_progress jika masih todo/blocked
+            if current_status in ['todo', 'blocked']:
+                updates["status"] = "in_progress"
+            # Tandai ada update baru untuk AM
+            updates["has_unread_update"] = True
+    
+    elif log_create.action == "mark_done":
+        # Hanya AM/Admin yang bisa
+        if not is_manager:
+            raise HTTPException(status_code=403, detail="Hanya AM atau Admin yang dapat menandai Done")
+        updates["status"] = "done"
+        updates["has_unread_update"] = False
+        updates["completed_at"] = now_wita.isoformat()
         
     await db.tasks.update_one(
         {"id": task_id},
         {"$set": updates}
     )
+    
+    # Kirim notifikasi WebSocket
+    try:
+        notif_payload = {"type": "TASK_UPDATE", "task_id": task_id, "action": log_create.action}
+        # Notif ke assigner (AM/Admin) jika yang update adalah staff
+        if not is_manager and task.get('assigner_id'):
+            await ws_manager.send_to_user(task['assigner_id'], notif_payload)
+        # Notif ke assignee jika yang update adalah AM/Admin
+        elif is_manager and task.get('assignee_id'):
+            await ws_manager.send_to_user(task['assignee_id'], notif_payload)
+    except Exception as e:
+        logger.error(f"Gagal kirim notif TASK_UPDATE: {e}")
+        
+    # Notifikasi Telegram
+    try:
+        telegram_msg = ""
+        task_title = task.get('title', 'Unknown Task')
+        user_name = user.get('full_name') or user.get('username') or 'Unknown'
+        
+        if log_create.action == "report_blocker":
+            telegram_msg = f"⚠️ <b>Kendala Dilaporkan!</b>\nOleh: {user_name}\nTugas: {task_title}\nPesan: {log_create.message}\n\nDetailnya cek di ZWMON."
+        elif log_create.action == "request_review":
+            telegram_msg = f"✅ <b>Tugas Menunggu Review</b>\nTugas: {task_title}\nTelah diselesaikan oleh: {user_name}\n\nMenunggu proses review oleh AM. Cek di ZWMON."
+        elif log_create.action == "mark_done":
+            telegram_msg = f"🎉 <b>Tugas Selesai!</b>\nTugas: {task_title}\nTelah direview dan dinyatakan DONE oleh {user_name}.\n\nTerima kasih atas kerjasamanya!"
+        elif log_create.action == "update_progress":
+            telegram_msg = f"📝 <b>Update Progress</b>\nOleh: {user_name}\nTugas: {task_title}\nPesan: {log_create.message}\n\nDetailnya cek di ZWMON."
+            
+        if telegram_msg:
+            await send_telegram_notification(telegram_msg)
+    except Exception as e:
+        logger.error(f"Gagal kirim Telegram notif: {e}")
     
     log.pop('_id', None)
     return log

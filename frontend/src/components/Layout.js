@@ -55,7 +55,7 @@ const Layout = ({ children }) => {
   const siteLogo = siteSettings?.site_logo;
 
   return (
-    <div className={`min-h-screen flex ${theme === 'light' ? 'bg-slate-50 text-slate-900' : 'bg-slate-950'}`}>
+    <div className={`h-screen overflow-hidden flex ${theme === 'light' ? 'bg-slate-50 text-slate-900' : 'bg-slate-950'}`}>
       {/* Sidebar - Desktop */}
       <aside className={`hidden lg:flex lg:flex-col lg:w-64 border-r ${theme === 'light' ? 'bg-white border-slate-200' : 'bg-slate-900/50 border-white/10'}`}>
         {/* Logo */}
@@ -168,7 +168,7 @@ const Layout = ({ children }) => {
       )}
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-h-screen">
+      <div className="flex-1 flex flex-col h-full overflow-hidden">
         {/* Header */}
         <header className={`sticky top-0 z-40 backdrop-blur-xl border-b ${theme === 'light' ? 'bg-white/80 border-slate-200' : 'bg-slate-950/80 border-white/10'}`}>
           <div className="flex items-center justify-between px-4 lg:px-8 h-16">
@@ -252,7 +252,7 @@ const Layout = ({ children }) => {
         </header>
 
         {/* Page Content */}
-        <main className={`flex-1 p-4 lg:p-8 ${theme === 'light' ? 'bg-slate-50' : ''}`}>
+        <main className={`flex-1 p-4 lg:p-8 overflow-y-auto min-h-0 ${theme === 'light' ? 'bg-slate-50' : ''}`}>
           {children}
         </main>
       </div>
