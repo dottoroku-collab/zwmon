@@ -140,17 +140,17 @@ export default function TaskManagerPage() {
 
   const renderKanbanBoard = () => {
     return (
-      <div className="flex gap-4 overflow-x-auto pb-4 h-[calc(100vh-200px)] snap-x snap-mandatory hide-scrollbar">
+      <div className="flex gap-4 overflow-x-auto pb-4 flex-1 min-h-0 snap-x snap-mandatory hide-scrollbar">
         {COLUMNS.map(column => (
-          <div key={column.id} className="min-w-[85vw] sm:min-w-[300px] w-[85vw] sm:w-[300px] flex flex-col glass-card rounded-xl overflow-hidden snap-center">
-            <div className={`${column.color} p-3 flex justify-between items-center`}>
+          <div key={column.id} className="min-w-[85vw] sm:min-w-[300px] w-[85vw] sm:w-[300px] flex flex-col glass-card rounded-xl overflow-hidden snap-center max-h-full">
+            <div className={`${column.color} p-3 flex justify-between items-center shrink-0`}>
               <h3 className="font-semibold text-white">{column.title}</h3>
               <Badge variant="secondary" className="bg-black/20 text-white border-0">
                 {tasks.filter(t => t.status === column.id).length}
               </Badge>
             </div>
             
-            <div className="p-3 flex-1 overflow-y-auto space-y-3">
+            <div className="p-3 flex-1 overflow-y-auto space-y-3 min-h-0">
               {tasks.filter(t => t.status === column.id).map(task => (
                 <div 
                   key={task.id}
@@ -197,19 +197,19 @@ export default function TaskManagerPage() {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6 animate-fade-in h-full flex flex-col px-2 sm:px-0">
+    <div className="animate-fade-in h-full flex flex-col px-2 sm:px-0 relative max-h-screen sm:max-h-full pb-20 sm:pb-0">
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mt-2 sm:mt-0">
+      <div className="flex items-center justify-between gap-4 mt-2 sm:mt-0 mb-4 sm:mb-6 shrink-0">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-white flex items-center">
             <CheckSquare className="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-blue-500" />
             Task Management
           </h1>
-          <p className="text-sm sm:text-base text-slate-400">Pantau dan kelola penugasan operasional</p>
+          <p className="text-xs sm:text-base text-slate-400">Pantau dan kelola penugasan operasional</p>
         </div>
         {isManager && (
-          <Button onClick={() => setIsCreateModalOpen(true)} className="btn-primary w-full sm:w-auto">
+          <Button onClick={() => setIsCreateModalOpen(true)} className="btn-primary text-white hidden sm:flex">
             <Plus className="w-4 h-4 mr-2" />
             Buat Task
           </Button>
@@ -222,6 +222,16 @@ export default function TaskManagerPage() {
         </div>
       ) : (
         renderKanbanBoard()
+      )}
+
+      {/* Mobile FAB for Create Task */}
+      {isManager && (
+        <button 
+          onClick={() => setIsCreateModalOpen(true)}
+          className="sm:hidden fixed bottom-[80px] right-4 w-14 h-14 bg-red-600 rounded-full flex items-center justify-center text-white shadow-lg shadow-red-600/50 z-40 active:scale-95 transition-transform"
+        >
+          <Plus className="w-7 h-7" />
+        </button>
       )}
 
       {/* Create Task Modal */}
