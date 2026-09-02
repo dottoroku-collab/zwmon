@@ -47,8 +47,8 @@ const AuthPage = () => {
         <div className="max-w-md w-full mx-auto">
           {/* Logo */}
           <div className="flex items-center gap-3 mb-12">
-            <div className="w-12 h-12 rounded-xl bg-rose-500/20 flex items-center justify-center animate-pulse-glow">
-              <Ticket className="w-6 h-6 text-rose-500" />
+            <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center p-2 shadow-lg animate-pulse-glow">
+              <img src="/logo.png" alt="ZWMON Logo" className="w-full h-full object-contain" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-white">ZWMON</h1>

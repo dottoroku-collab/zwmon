@@ -64,8 +64,8 @@ const Layout = ({ children }) => {
             {siteLogo ? (
               <img src={siteLogo} alt="Logo" className="w-10 h-10 rounded-lg object-cover" />
             ) : (
-              <div className="w-10 h-10 rounded-lg bg-rose-500/20 flex items-center justify-center">
-                <Ticket className="w-5 h-5 text-rose-500" />
+              <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center p-1 shadow-sm">
+                <img src="/logo.png" alt="Logo ZWMON" className="w-full h-full object-contain" />
               </div>
             )}
             <div className="flex-1 min-w-0">
@@ -137,8 +137,8 @@ const Layout = ({ children }) => {
                 {siteLogo ? (
                   <img src={siteLogo} alt="Logo" className="w-10 h-10 rounded-lg object-cover" />
                 ) : (
-                  <div className="w-10 h-10 rounded-lg bg-rose-500/20 flex items-center justify-center">
-                    <Ticket className="w-5 h-5 text-rose-500" />
+                  <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center p-1 shadow-sm">
+                    <img src="/logo.png" alt="Logo ZWMON" className="w-full h-full object-contain" />
                   </div>
                 )}
                 <h1 className={`font-bold text-sm ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>{siteName}</h1>
