@@ -4,7 +4,7 @@ import { useApp } from '../context/AppContext';
 import { 
   LayoutDashboard, Ticket, Users, Settings, FileText, Calculator, LogOut, Menu, X, Bell,
   Camera, Server, Megaphone, ChevronRight, MapPin, MessageSquare, User, DollarSign,
-  ShieldCheck, Activity, Sun, Moon, Trash2, Video, CheckSquare
+  ShieldCheck, Activity, Sun, Moon, Trash2, Video, CheckSquare, Map, ClipboardList
 } from 'lucide-react';
 import { Button } from './ui/button';
 
@@ -36,6 +36,8 @@ const Layout = ({ children }) => {
     { path: '/tasks', icon: CheckSquare, label: 'Task Management', roles: ['admin', 'am', 'helpdesk', 'eos'] },
     { path: '/tickets', icon: Ticket, label: 'Tiket', roles: ['admin', 'am', 'helpdesk', 'eos', 'client'] },
     { path: '/monitoring', icon: Activity, label: 'Pemantauan', roles: ['admin', 'am', 'helpdesk', 'eos'] },
+    { path: '/live-map', icon: Map, label: 'Live Map', roles: ['admin', 'am', 'helpdesk'] },
+    { path: '/attendance-report', icon: ClipboardList, label: 'Laporan Absensi', roles: ['admin', 'am'] },
     { path: '/live-cctv', icon: Video, label: 'Live CCTV', roles: ['admin', 'am', 'helpdesk', 'eos'] },
     { path: '/chat', icon: MessageSquare, label: 'Chat', roles: ['admin', 'am', 'helpdesk', 'eos', 'client'] },
     { path: '/users', icon: Users, label: 'Kelola User', roles: ['admin'] },

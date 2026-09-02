@@ -20,6 +20,8 @@ import ProfilePage from './pages/ProfilePage';
 import ChatPage from './pages/ChatPage';
 import LiveCCTVPage from './pages/LiveCCTVPage'; 
 import TaskManagerPage from './pages/TaskManagerPage';
+import LiveMapPage from './pages/LiveMapPage';
+import AttendanceReportPage from './pages/AttendanceReportPage';
 
 import Layout from './components/Layout';
 import './App.css';
@@ -136,6 +138,18 @@ const AppRoutes = () => {
       <Route path="/monitoring" element={
         <ProtectedRoute roles={['admin', 'am', 'helpdesk', 'eos']}>
           <MonitoringPage />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/live-map" element={
+        <ProtectedRoute roles={['admin', 'am', 'helpdesk']}>
+          <LiveMapPage />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/attendance-report" element={
+        <ProtectedRoute roles={['admin', 'am']}>
+          <AttendanceReportPage />
         </ProtectedRoute>
       } />
       

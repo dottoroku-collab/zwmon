@@ -9,6 +9,8 @@ RUN apt-get update && apt-get install -y \
     libxext6 \
     libturbojpeg0 \
     iputils-ping \
+    build-essential \
+    cmake \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory

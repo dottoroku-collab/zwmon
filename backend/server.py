@@ -38,6 +38,13 @@ from fastapi.responses import FileResponse
 from starlette.background import BackgroundTask
 
 # --- KELAS HORIZONTAL LINE ---
+try:
+    import face_recognition
+    import numpy as np
+    FACE_REC_AVAILABLE = True
+except ImportError:
+    FACE_REC_AVAILABLE = False
+    
 class HorizontalLine(Flowable):
     def __init__(self, width, color=colors.black):
         Flowable.__init__(self)
@@ -178,6 +185,13 @@ class UserCreate(BaseModel):
     role: str = "client"
     full_name: str = ""
     phone: str = ""
+    
+class LocationLogCreate(BaseModel):
+    latitude: float
+    longitude: float
+    timestamp: Optional[str] = None
+    battery_level: Optional[float] = None
+    speed: Optional[float] = None
 
 class UserLogin(BaseModel):
     email: str
@@ -784,6 +798,185 @@ async def delete_conversation(other_user_id: str, user: dict = Depends(get_curre
         raise HTTPException(status_code=404, detail="Percakapan tidak ditemukan atau sudah dihapus")
         
     return {"message": "Percakapan berhasil dimusnahkan"}
+
+# ============ ATTENDANCE (FACE REC & GPS) ============
+@api_router.post("/attendance/face-reference")
+async def register_face_reference(file: UploadFile = File(...), user: dict = Depends(get_current_user)):
+    if not FACE_REC_AVAILABLE:
+        raise HTTPException(status_code=500, detail="Face recognition is not configured on server")
+    
+    file_ext = file.filename.split(".")[-1]
+    filename = f"face_ref_{user['id']}_{int(time.time())}.{file_ext}"
+    filepath = UPLOAD_DIR / filename
+    
+    with open(filepath, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+        
+    try:
+        image = face_recognition.load_image_file(filepath)
+        face_encodings = face_recognition.face_encodings(image)
+        
+        if len(face_encodings) == 0:
+            os.remove(filepath)
+            raise HTTPException(status_code=400, detail="Wajah tidak terdeteksi pada gambar")
+        if len(face_encodings) > 1:
+            os.remove(filepath)
+            raise HTTPException(status_code=400, detail="Terdeteksi lebih dari satu wajah")
+            
+        encoding_list = face_encodings[0].tolist()
+        
+        await db.users.update_one(
+            {"_id": user["_id"]},
+            {"$set": {"face_reference_url": f"/uploads/{filename}", "face_encoding": encoding_list}}
+        )
+        
+        return {"message": "Referensi wajah berhasil disimpan", "url": f"/uploads/{filename}"}
+    except Exception as e:
+        if os.path.exists(filepath):
+            os.remove(filepath)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/attendance/clock-in")
+async def clock_in(
+    latitude: float = Form(...),
+    longitude: float = Form(...),
+    file: UploadFile = File(...),
+    user: dict = Depends(get_current_user)
+):
+    if not FACE_REC_AVAILABLE:
+        raise HTTPException(status_code=500, detail="Face recognition is not configured on server")
+        
+    db_user = await db.users.find_one({"_id": user["_id"]})
+    if not db_user or "face_encoding" not in db_user:
+        raise HTTPException(status_code=400, detail="Referensi wajah belum didaftarkan")
+        
+    known_encoding = np.array(db_user["face_encoding"])
+    
+    file_ext = file.filename.split(".")[-1]
+    filename = f"clockin_{user['id']}_{int(time.time())}.{file_ext}"
+    filepath = UPLOAD_DIR / filename
+    
+    with open(filepath, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+        
+    try:
+        image = face_recognition.load_image_file(filepath)
+        face_encodings = face_recognition.face_encodings(image)
+        
+        if len(face_encodings) == 0:
+            os.remove(filepath)
+            raise HTTPException(status_code=400, detail="Wajah tidak terdeteksi")
+            
+        match = face_recognition.compare_faces([known_encoding], face_encodings[0], tolerance=0.5)[0]
+        if not match:
+            os.remove(filepath)
+            raise HTTPException(status_code=401, detail="Wajah tidak cocok dengan data staf")
+            
+        log = {
+            "id": str(uuid.uuid4()),
+            "user_id": user["id"],
+            "username": user["username"],
+            "full_name": user.get("full_name", ""),
+            "type": "clock_in",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "latitude": latitude,
+            "longitude": longitude,
+            "photo_url": f"/uploads/{filename}"
+        }
+        await db.attendance_logs.insert_one(log)
+        
+        await db.location_logs.insert_one({
+            "user_id": user["id"],
+            "username": user["username"],
+            "latitude": latitude,
+            "longitude": longitude,
+            "timestamp": log["timestamp"]
+        })
+        
+        return {"message": "Berhasil Clock In", "log": log}
+    except HTTPException:
+        raise
+    except Exception as e:
+        if os.path.exists(filepath):
+            os.remove(filepath)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/attendance/clock-out")
+async def clock_out(
+    latitude: float = Form(...),
+    longitude: float = Form(...),
+    report_text: str = Form(...),
+    file: UploadFile = File(...),
+    user: dict = Depends(get_current_user)
+):
+    file_ext = file.filename.split(".")[-1]
+    filename = f"clockout_{user['id']}_{int(time.time())}.{file_ext}"
+    filepath = UPLOAD_DIR / filename
+    
+    with open(filepath, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+        
+    log = {
+        "id": str(uuid.uuid4()),
+        "user_id": user["id"],
+        "username": user["username"],
+        "full_name": user.get("full_name", ""),
+        "type": "clock_out",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "latitude": latitude,
+        "longitude": longitude,
+        "report_text": report_text,
+        "evidence_url": f"/uploads/{filename}"
+    }
+    await db.attendance_logs.insert_one(log)
+    return {"message": "Berhasil Clock Out", "log": log}
+
+@api_router.post("/attendance/ping")
+async def location_ping(
+    data: LocationLogCreate,
+    user: dict = Depends(get_current_user)
+):
+    log = {
+        "user_id": user["id"],
+        "username": user["username"],
+        "full_name": user.get("full_name", ""),
+        "latitude": data.latitude,
+        "longitude": data.longitude,
+        "battery_level": data.battery_level,
+        "speed": data.speed,
+        "timestamp": data.timestamp or datetime.now(timezone.utc).isoformat()
+    }
+    await db.location_logs.insert_one(log)
+    return {"message": "Location updated"}
+
+@api_router.get("/attendance/live-locations")
+async def get_live_locations(user: dict = Depends(get_current_user)):
+    pipeline = [
+        {"$sort": {"timestamp": -1}},
+        {"$group": {
+            "_id": "$user_id",
+            "user_id": {"$first": "$user_id"},
+            "username": {"$first": "$username"},
+            "full_name": {"$first": "$full_name"},
+            "latitude": {"$first": "$latitude"},
+            "longitude": {"$first": "$longitude"},
+            "battery_level": {"$first": "$battery_level"},
+            "timestamp": {"$first": "$timestamp"}
+        }}
+    ]
+    cursor = db.location_logs.aggregate(pipeline)
+    locations = await cursor.to_list(length=100)
+    for loc in locations:
+        loc.pop("_id", None)
+    return locations
+
+@api_router.get("/attendance/logs")
+async def get_attendance_logs(user: dict = Depends(get_current_user)):
+    cursor = db.attendance_logs.find().sort("timestamp", -1).limit(200)
+    logs = await cursor.to_list(length=200)
+    for log in logs:
+        log["_id"] = str(log["_id"])
+    return logs
 
 # ============ USER MANAGEMENT ROUTES ============
 
