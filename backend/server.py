@@ -180,7 +180,7 @@ class UserCreate(BaseModel):
     phone: str = ""
 
 class UserLogin(BaseModel):
-    email: EmailStr
+    email: str
     password: str
 
 class UserUpdate(BaseModel):
@@ -550,7 +550,12 @@ async def register(user: UserCreate):
 
 @api_router.post("/auth/login")
 async def login(credentials: UserLogin):
-    user = await db.users.find_one({"email": credentials.email}, {"_id": 0})
+    user = await db.users.find_one({
+        "$or": [
+            {"email": credentials.email},
+            {"username": credentials.email}
+        ]
+    }, {"_id": 0})
     if not user:
         raise HTTPException(status_code=401, detail="Email atau password salah")
     
