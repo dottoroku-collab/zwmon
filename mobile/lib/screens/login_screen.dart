@@ -59,18 +59,8 @@ class LoginScreenState extends State<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Icon(Icons.monitor_heart, size: 80, color: Colors.white),
+                  Image.asset('assets/images/logo.png', height: 80),
                   const SizedBox(height: 16),
-                  const Text(
-                    'ZWMON',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 32, 
-                      fontWeight: FontWeight.bold, 
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
                   const Text(
                     'Masuk ke Akun Anda',
                     textAlign: TextAlign.center,
