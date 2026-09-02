@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Membutuhkan akses mikrofon untuk fitur Push-to-Talk / Walkie Talkie</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
@@ -66,5 +68,13 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>Aplikasi ZWMON membutuhkan akses kamera untuk fitur absensi pengenalan wajah (Face Recognition).</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Aplikasi ZWMON membutuhkan akses mikrofon untuk kamera.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Aplikasi ZWMON membutuhkan akses lokasi untuk fitur absensi berbasis GPS.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Aplikasi ZWMON membutuhkan akses lokasi di latar belakang untuk pelacakan lokasi secara berkala.</string>
 </dict>
 </plist>

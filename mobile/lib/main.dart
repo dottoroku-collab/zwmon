@@ -5,10 +5,18 @@ import 'providers/auth_provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/task_list_screen.dart';
 import 'screens/task_detail_screen.dart';
+import 'screens/clock_in_screen.dart';
+import 'screens/clock_out_screen.dart';
+import 'screens/daily_report_screen.dart';
+import 'screens/face_registration_screen.dart';
+import 'services/background_service.dart';
 
 import 'theme/app_theme.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initializeBackgroundService();
+  
   runApp(
     MultiProvider(
       providers: [
@@ -57,6 +65,30 @@ class ZWMONApp extends StatelessWidget {
           path: '/task/:id',
           builder: (BuildContext context, GoRouterState state) {
             return TaskDetailScreen(taskId: state.pathParameters['id']!);
+          },
+        ),
+        GoRoute(
+          path: '/clock-in',
+          builder: (BuildContext context, GoRouterState state) {
+            return const ClockInScreen();
+          },
+        ),
+        GoRoute(
+          path: '/clock-out',
+          builder: (BuildContext context, GoRouterState state) {
+            return const ClockOutScreen();
+          },
+        ),
+        GoRoute(
+          path: '/register-face',
+          builder: (BuildContext context, GoRouterState state) {
+            return const FaceRegistrationScreen();
+          },
+        ),
+        GoRoute(
+          path: '/daily-report',
+          builder: (BuildContext context, GoRouterState state) {
+            return const DailyReportScreen();
           },
         ),
       ],

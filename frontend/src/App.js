@@ -22,7 +22,7 @@ import LiveCCTVPage from './pages/LiveCCTVPage';
 import TaskManagerPage from './pages/TaskManagerPage';
 import LiveMapPage from './pages/LiveMapPage';
 import AttendanceReportPage from './pages/AttendanceReportPage';
-
+import ErrorBoundary from './components/ErrorBoundary';
 import Layout from './components/Layout';
 import './App.css';
 
@@ -184,12 +184,14 @@ const AppRoutes = () => {
 
 function App() {
   return (
-    <AppProvider>
-      <BrowserRouter>
-        <AppRoutes />
-        <ThemedToaster />
-      </BrowserRouter>
-    </AppProvider>
+    <ErrorBoundary>
+      <AppProvider>
+        <BrowserRouter>
+          <AppRoutes />
+          <ThemedToaster />
+        </BrowserRouter>
+      </AppProvider>
+    </ErrorBoundary>
   );
 }
 

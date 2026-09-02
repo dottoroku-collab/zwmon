@@ -1,22 +1,34 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import axios from 'axios';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { MapPin } from 'lucide-react';
+import { MapPin, Mic, MicOff } from 'lucide-react';
+import { useApp } from '../context/AppContext';
 
 const LiveMapPage = () => {
+  const { api } = useApp();
   const [locations, setLocations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  
+  // PTT State
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const wsRef = useRef(null);
 
   const fetchLocations = async () => {
     try {
       const response = await axios.get('/api/attendance/live-locations', {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
-      setLocations(response.data);
+      if (Array.isArray(response.data)) {
+        setLocations(response.data);
+      } else {
+        console.error("Expected array but got:", typeof response.data);
+      }
       setLoading(false);
     } catch (err) {
       console.error(err);
@@ -28,8 +40,84 @@ const LiveMapPage = () => {
   useEffect(() => {
     fetchLocations();
     const interval = setInterval(fetchLocations, 30000);
-    return () => clearInterval(interval);
+    
+    // Connect WebSocket for PTT
+    const token = localStorage.getItem('token');
+    const wsUrl = process.env.REACT_APP_API_URL 
+      ? process.env.REACT_APP_API_URL.replace('http', 'ws') 
+      : `ws://${window.location.host}/api`;
+      
+    wsRef.current = new WebSocket(`${wsUrl}/ws/${token}`);
+    
+    wsRef.current.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'ptt_audio') {
+          // Play the audio
+          const audioUrl = process.env.REACT_APP_API_URL 
+            ? `${process.env.REACT_APP_API_URL}${data.url}` 
+            : data.url;
+          
+          const audio = new Audio(audioUrl);
+          audio.play().catch(e => console.error("Auto-play failed:", e));
+        }
+      } catch (e) {
+        console.error("Error parsing WS message:", e);
+      }
+    };
+
+    return () => {
+      clearInterval(interval);
+      if (wsRef.current) wsRef.current.close();
+    };
   }, []);
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorderRef.current = new MediaRecorder(stream);
+      audioChunksRef.current = [];
+
+      mediaRecorderRef.current.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorderRef.current.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        
+        // Upload audio
+        const formData = new FormData();
+        formData.append('audio_file', audioBlob, `ptt_web_${Date.now()}.webm`);
+        
+        try {
+          await api.post('/ptt/upload', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          });
+        } catch (e) {
+          console.error("Failed to upload PTT:", e);
+          alert("Gagal mengirim pesan suara");
+        }
+        
+        // Stop all tracks to release mic
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorderRef.current.start();
+      setIsRecording(true);
+    } catch (e) {
+      console.error("Mic access denied or error:", e);
+      alert("Izin mikrofon diperlukan untuk Walkie-Talkie");
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
 
   const createIcon = (name) => {
     const iconMarkup = renderToStaticMarkup(
@@ -70,7 +158,7 @@ const LiveMapPage = () => {
         </div>
       )}
       
-      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm h-[70vh]">
+      <div className="relative bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm h-[70vh]">
         <MapContainer center={[-5.147665, 119.432731]} zoom={12} style={{ height: '100%', width: '100%' }}>
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -83,14 +171,35 @@ const LiveMapPage = () => {
                   <p className="font-bold">{loc.full_name || loc.username}</p>
                   <p className="text-xs text-slate-500">Last Update: {new Date(loc.timestamp).toLocaleString()}</p>
                   {loc.battery_level && <p className="text-xs text-slate-500">Battery: {loc.battery_level}%</p>}
+                  {loc.speed !== undefined && <p className="text-xs text-slate-500">Speed: {Math.round(loc.speed * 3.6)} km/h</p>}
                 </div>
               </Popup>
             </Marker>
           ))}
         </MapContainer>
+
+        {/* PTT Button Overlay */}
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[1000] flex flex-col items-center">
+          <button
+            onMouseDown={startRecording}
+            onMouseUp={stopRecording}
+            onMouseLeave={stopRecording}
+            onTouchStart={startRecording}
+            onTouchEnd={stopRecording}
+            className={`w-16 h-16 rounded-full flex items-center justify-center text-white shadow-xl transition-all ${
+              isRecording ? 'bg-red-500 scale-110 shadow-red-500/50' : 'bg-blue-600 hover:bg-blue-700'
+            }`}
+          >
+            {isRecording ? <Mic size={32} /> : <MicOff size={32} />}
+          </button>
+          <span className="mt-2 text-xs font-bold bg-white/80 dark:bg-slate-800/80 px-2 py-1 rounded backdrop-blur-sm text-slate-800 dark:text-white">
+            {isRecording ? 'Merekam... Lepas untuk kirim' : 'Tahan untuk Bicara (PTT)'}
+          </span>
+        </div>
       </div>
     </div>
   );
 };
 
 export default LiveMapPage;
+

@@ -1,6 +1,16 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
+  static BoxDecoration get gradientBackground {
+    return const BoxDecoration(
+      gradient: LinearGradient(
+        colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+    );
+  }
+
   static ThemeData get lightTheme {
     return ThemeData(
       brightness: Brightness.light,

@@ -41,6 +41,7 @@ from starlette.background import BackgroundTask
 try:
     import face_recognition
     import numpy as np
+    from PIL import Image, ImageOps
     FACE_REC_AVAILABLE = True
 except ImportError:
     FACE_REC_AVAILABLE = False
@@ -62,6 +63,9 @@ load_dotenv(ROOT_DIR / '.env')
 UPLOAD_DIR = ROOT_DIR / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
 
+PTT_DIR = ROOT_DIR / "ptt_audio"
+PTT_DIR.mkdir(exist_ok=True)
+
 # MongoDB connection
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
@@ -79,6 +83,7 @@ app = FastAPI(title="Sistem Tiketing & SLA Control Telkom Makassar")
 api_router = APIRouter(prefix="/api")
 # Pasang jalur akses statis supaya foto bisa dipanggil via browser
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
+app.mount("/ptt_audio", StaticFiles(directory=PTT_DIR), name="ptt_audio")
 
 app.add_middleware(
     CORSMiddleware,
@@ -813,7 +818,9 @@ async def register_face_reference(file: UploadFile = File(...), user: dict = Dep
         shutil.copyfileobj(file.file, buffer)
         
     try:
-        image = face_recognition.load_image_file(filepath)
+        img_pil = Image.open(filepath)
+        img_pil = ImageOps.exif_transpose(img_pil)
+        image = np.array(img_pil.convert('RGB'))
         face_encodings = face_recognition.face_encodings(image)
         
         if len(face_encodings) == 0:
@@ -826,7 +833,7 @@ async def register_face_reference(file: UploadFile = File(...), user: dict = Dep
         encoding_list = face_encodings[0].tolist()
         
         await db.users.update_one(
-            {"_id": user["_id"]},
+            {"id": user["id"]},
             {"$set": {"face_reference_url": f"/uploads/{filename}", "face_encoding": encoding_list}}
         )
         
@@ -846,7 +853,7 @@ async def clock_in(
     if not FACE_REC_AVAILABLE:
         raise HTTPException(status_code=500, detail="Face recognition is not configured on server")
         
-    db_user = await db.users.find_one({"_id": user["_id"]})
+    db_user = await db.users.find_one({"id": user["id"]})
     if not db_user or "face_encoding" not in db_user:
         raise HTTPException(status_code=400, detail="Referensi wajah belum didaftarkan")
         
@@ -860,7 +867,9 @@ async def clock_in(
         shutil.copyfileobj(file.file, buffer)
         
     try:
-        image = face_recognition.load_image_file(filepath)
+        img_pil = Image.open(filepath)
+        img_pil = ImageOps.exif_transpose(img_pil)
+        image = np.array(img_pil.convert('RGB'))
         face_encodings = face_recognition.face_encodings(image)
         
         if len(face_encodings) == 0:
@@ -893,6 +902,7 @@ async def clock_in(
             "timestamp": log["timestamp"]
         })
         
+        log.pop('_id', None)
         return {"message": "Berhasil Clock In", "log": log}
     except HTTPException:
         raise
@@ -905,16 +915,15 @@ async def clock_in(
 async def clock_out(
     latitude: float = Form(...),
     longitude: float = Form(...),
-    report_text: str = Form(...),
-    file: UploadFile = File(...),
     user: dict = Depends(get_current_user)
 ):
-    file_ext = file.filename.split(".")[-1]
-    filename = f"clockout_{user['id']}_{int(time.time())}.{file_ext}"
-    filepath = UPLOAD_DIR / filename
+    now_wita = await get_now_local()
+    date_str = now_wita.strftime("%Y-%m-%d")
     
-    with open(filepath, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    # Validasi: Harus isi laporan harian dulu
+    report = await db.daily_reports.find_one({"user_id": user["id"], "date": date_str})
+    if not report:
+        raise HTTPException(status_code=400, detail="Anda belum mengisi Laporan Pekerjaan Hari Ini.")
         
     log = {
         "id": str(uuid.uuid4()),
@@ -924,12 +933,45 @@ async def clock_out(
         "type": "clock_out",
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "latitude": latitude,
-        "longitude": longitude,
-        "report_text": report_text,
-        "evidence_url": f"/uploads/{filename}"
+        "longitude": longitude
     }
     await db.attendance_logs.insert_one(log)
+    log.pop('_id', None)
     return {"message": "Berhasil Clock Out", "log": log}
+
+@api_router.post("/attendance/daily-report")
+async def daily_report(
+    report_text: str = Form(...),
+    file: UploadFile = File(...),
+    user: dict = Depends(get_current_user)
+):
+    now_wita = await get_now_local()
+    date_str = now_wita.strftime("%Y-%m-%d")
+    
+    existing = await db.daily_reports.find_one({"user_id": user["id"], "date": date_str})
+    if existing:
+        raise HTTPException(status_code=400, detail="Laporan harian untuk hari ini sudah ada")
+        
+    file_ext = file.filename.split(".")[-1]
+    filename = f"daily_report_{user['id']}_{int(time.time())}.{file_ext}"
+    filepath = UPLOAD_DIR / filename
+    
+    with open(filepath, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+        
+    report = {
+        "id": str(uuid.uuid4()),
+        "user_id": user["id"],
+        "username": user["username"],
+        "full_name": user.get("full_name", ""),
+        "report_text": report_text,
+        "evidence_url": f"/uploads/{filename}",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "date": date_str
+    }
+    await db.daily_reports.insert_one(report)
+    report.pop('_id', None)
+    return {"message": "Berhasil submit laporan harian", "report": report}
 
 @api_router.post("/attendance/ping")
 async def location_ping(
@@ -976,6 +1018,21 @@ async def get_attendance_logs(user: dict = Depends(get_current_user)):
     logs = await cursor.to_list(length=200)
     for log in logs:
         log["_id"] = str(log["_id"])
+        
+        # Attach daily report if type is clock_out
+        if log.get("type") == "clock_out":
+            # format timestamp to date string YYYY-MM-DD
+            try:
+                date_obj = datetime.fromisoformat(log["timestamp"].replace('Z', '+00:00'))
+                date_str = date_obj.strftime("%Y-%m-%d")
+                
+                report = await db.daily_reports.find_one({"user_id": log["user_id"], "date": date_str})
+                if report:
+                    log["report_text"] = report.get("report_text")
+                    log["evidence_url"] = report.get("evidence_url")
+            except Exception as e:
+                pass
+                
     return logs
 
 # ============ USER MANAGEMENT ROUTES ============
@@ -4225,6 +4282,32 @@ async def get_online_users(user: dict = Depends(get_current_user)):
         })
     
     return {"total_online": len(online_data), "users": online_data}
+
+@api_router.post("/ptt/upload")
+async def upload_ptt_audio(audio_file: UploadFile = File(...), user: dict = Depends(get_current_user)):
+    try:
+        timestamp = int(datetime.utcnow().timestamp())
+        file_extension = audio_file.filename.split('.')[-1]
+        filename = f"ptt_{user['_id']}_{timestamp}.{file_extension}"
+        file_path = PTT_DIR / filename
+        
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(audio_file.file, buffer)
+            
+        # Broadcast the audio URL to all active connections
+        audio_url = f"/ptt_audio/{filename}"
+        await ws_manager.broadcast({
+            "type": "ptt_audio",
+            "url": audio_url,
+            "sender_id": str(user['_id']),
+            "sender_name": user.get('full_name', 'Unknown'),
+            "sender_role": user.get('role', 'Unknown')
+        })
+        
+        return {"success": True, "message": "Audio sent", "url": audio_url}
+    except Exception as e:
+        logger.error(f"Failed to process PTT audio: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.post("/seed")
 async def seed_database():

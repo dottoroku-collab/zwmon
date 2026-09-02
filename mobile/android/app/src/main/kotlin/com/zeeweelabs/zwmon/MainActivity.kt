@@ -1,4 +1,4 @@
-package com.dottoroku.zwmon_mobile
+package com.zeeweelabs.zwmon
 
 import io.flutter.embedding.android.FlutterActivity
 

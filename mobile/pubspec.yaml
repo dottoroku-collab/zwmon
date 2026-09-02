@@ -41,6 +41,11 @@ dependencies:
   geolocator: ^13.0.0
   camera: ^0.11.0
   flutter_background_service: ^3.0.0
+  image_picker: ^1.2.3
+  battery_plus: ^7.1.1
+  record: ^7.1.1
+  audioplayers: ^6.8.1
+  web_socket_channel: ^3.0.3
 
 dev_dependencies:
   flutter_test:

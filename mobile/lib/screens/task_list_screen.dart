@@ -5,7 +5,9 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
 import '../services/api_service.dart';
+import '../services/websocket_service.dart';
 import '../widgets/glass_container.dart';
+import '../widgets/ptt_button.dart';
 
 class TaskListScreen extends StatefulWidget {
   const TaskListScreen({super.key});
@@ -23,6 +25,7 @@ class TaskListScreenState extends State<TaskListScreen> {
   void initState() {
     super.initState();
     _fetchTasks();
+    WebSocketService().connect();
     // Auto-refresh every 10 seconds
     _refreshTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
       _fetchTasks(showLoading: false);
@@ -67,6 +70,38 @@ class TaskListScreenState extends State<TaskListScreen> {
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _fetchTasks,
+          ),
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == 'register_face') {
+                context.push('/register-face');
+              } else if (value == 'clock_in') {
+                context.push('/clock-in');
+              } else if (value == 'daily_report') {
+                context.push('/daily-report');
+              } else if (value == 'clock_out') {
+                context.push('/clock-out');
+              }
+            },
+            itemBuilder: (BuildContext context) => [
+              const PopupMenuItem(
+                value: 'register_face',
+                child: Text('Daftarkan Wajah (Awal)'),
+              ),
+              const PopupMenuItem(
+                value: 'clock_in',
+                child: Text('Clock In (Absen Masuk)'),
+              ),
+              const PopupMenuItem(
+                value: 'daily_report',
+                child: Text('Laporan Pekerjaan Hari Ini'),
+              ),
+              const PopupMenuItem(
+                value: 'clock_out',
+                child: Text('Clock Out (Absen Keluar)'),
+              ),
+            ],
+            icon: const Icon(Icons.co_present),
           ),
           IconButton(
             icon: const Icon(Icons.logout),
@@ -154,6 +189,8 @@ class TaskListScreenState extends State<TaskListScreen> {
                     ),
         ),
       ),
+      floatingActionButton: const PTTButton(),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 
