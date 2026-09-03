@@ -134,8 +134,8 @@ const Layout = ({ children }) => {
       {sidebarOpen && (
         <div className="lg:hidden fixed inset-0 z-50">
           <div className="absolute inset-0 bg-black/60" onClick={() => setSidebarOpen(false)} />
-          <aside className={`absolute left-0 top-0 bottom-0 w-72 animate-fade-in ${theme === 'light' ? 'bg-white' : 'bg-slate-900'} border-r ${theme === 'light' ? 'border-slate-200' : 'border-white/10'}`}>
-            <div className={`p-6 border-b flex items-center justify-between ${theme === 'light' ? 'border-slate-200' : 'border-white/10'}`}>
+          <aside className={`absolute left-0 top-0 bottom-0 w-72 flex flex-col animate-fade-in ${theme === 'light' ? 'bg-white' : 'bg-slate-900'} border-r ${theme === 'light' ? 'border-slate-200' : 'border-white/10'}`}>
+            <div className={`p-6 border-b flex items-center justify-between shrink-0 ${theme === 'light' ? 'border-slate-200' : 'border-white/10'}`}>
               <div className="flex items-center gap-3">
                 {siteLogo ? (
                   <img src={siteLogo} alt="Logo" className="w-10 h-10 rounded-lg object-cover" />
@@ -148,7 +148,7 @@ const Layout = ({ children }) => {
               </div>
               <button onClick={() => setSidebarOpen(false)} className="text-slate-400"><X className="w-5 h-5" /></button>
             </div>
-            <nav className="p-4 space-y-1">
+            <nav className="flex-1 overflow-y-auto p-4 space-y-1" style={{ scrollbarWidth: 'none' }}>
               {filteredMenuItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = location.pathname === item.path;
@@ -161,7 +161,7 @@ const Layout = ({ children }) => {
                 );
               })}
             </nav>
-            <div className={`absolute bottom-0 left-0 right-0 p-4 border-t ${theme === 'light' ? 'border-slate-200' : 'border-white/10'}`}>
+            <div className={`p-4 border-t shrink-0 ${theme === 'light' ? 'border-slate-200' : 'border-white/10'}`}>
               <Button onClick={handleLogout} variant="ghost" className="w-full justify-start text-slate-400 hover:text-rose-400">
                 <LogOut className="w-4 h-4 mr-2" />Keluar
               </Button>
