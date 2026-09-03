@@ -199,7 +199,7 @@ const LiveMapPage = () => {
       </div>
 
       {/* ===== MAP AREA ===== */}
-      <div className="relative flex-1 overflow-hidden rounded-b-2xl md:rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl">
+      <div className="relative z-0 flex-1 overflow-hidden rounded-b-2xl md:rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl">
         <MapContainer
           center={[-5.147665, 119.432731]}
           zoom={13}
