@@ -123,185 +123,256 @@ const LiveMapPage = () => {
     return null;
   }).filter(Boolean);
 
+  // Layer toggle button for mobile top bar
+  const MobileLayerBtn = ({ layer, icon: Icon, label, count, activeColor, activeBg, activeBorder }) => (
+    <button
+      onClick={() => toggleLayer(layer)}
+      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all shrink-0 border ${
+        visibleLayers[layer]
+          ? `${activeBg} ${activeBorder} ${activeColor}`
+          : isDark
+            ? 'bg-slate-800/60 border-slate-700 text-slate-500'
+            : 'bg-white/60 border-slate-300 text-slate-400'
+      }`}
+    >
+      <Icon size={12} />
+      {label}
+      <span className={`font-bold ml-0.5 ${visibleLayers[layer] ? activeColor : 'text-slate-500'}`}>{count}</span>
+    </button>
+  );
+
   return (
-    <div className="h-[calc(100vh-8rem)] w-full relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-2xl">
-      <MapContainer 
-        center={[-5.147665, 119.432731]} 
-        zoom={13} 
-        style={{ height: '100%', width: '100%' }}
-        zoomControl={false}
+    <div className="flex flex-col h-[calc(100vh-8rem)] w-full">
+
+      {/* ===== MOBILE TOP BAR (visible on <md only) ===== */}
+      <div className={`flex md:hidden items-center gap-2 px-3 py-2 overflow-x-auto shrink-0 border border-b-0 border-slate-200 dark:border-slate-800 rounded-t-2xl ${isDark ? 'glass-panel' : 'glass-panel-light'}`}
+        style={{ scrollbarWidth: 'none' }}
       >
-        <TileLayer
-          key={theme}
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; OpenStreetMap contributors'
-          className={isDark ? "map-tiles-dark" : ""}
-        />
-        <ZoomControl position="topright" />
-        
-        {/* Render Staf */}
-        {['admin', 'am'].includes(user?.role) && visibleLayers.team && locations.map((loc) => (
-          <Marker key={loc.user_id} position={[loc.latitude, loc.longitude]} icon={createStaffIcon(loc.username)}>
-            <Popup className="custom-popup">
-              <div className="p-2 min-w-[150px]">
-                <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-200 dark:border-slate-700">
-                  <div className="w-8 h-8 bg-rose-100 dark:bg-rose-900/30 rounded-full flex items-center justify-center">
-                    <Users size={16} className="text-rose-600 dark:text-rose-400" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-sm text-slate-800 dark:text-white">{loc.full_name || loc.username}</p>
-                    <p className="text-[10px] text-slate-500">{new Date(loc.timestamp).toLocaleTimeString()}</p>
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  {loc.battery_level && (
-                    <div className="flex justify-between text-xs">
-                      <span className="text-slate-500">Baterai</span>
-                      <span className="font-medium text-slate-700 dark:text-slate-300">{loc.battery_level}%</span>
-                    </div>
-                  )}
-                  {loc.speed !== undefined && (
-                    <div className="flex justify-between text-xs">
-                      <span className="text-slate-500">Kecepatan</span>
-                      <span className="font-medium text-slate-700 dark:text-slate-300">{Math.round(loc.speed * 3.6)} km/h</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
-
-        {/* Render Titik Layanan */}
-        {validServicePoints.filter(sp => {
-           if (sp.service_type === 'cctv' && !visibleLayers.cctv) return false;
-           if (sp.service_type === 'skpd' && !visibleLayers.skpd) return false;
-           if (sp.service_type === 'ip_speaker' && !visibleLayers.ip_speaker) return false;
-           return true;
-        }).map((sp) => (
-          <Marker key={sp.id} position={[sp.lat, sp.lng]} icon={createServiceIcon(sp.service_type, sp.name)}>
-            <Popup className="custom-popup" maxWidth={320} minWidth={240}>
-              <div className="w-full">
-                {sp.service_type === 'cctv' && (
-                  <div className="w-full aspect-video bg-black relative flex items-center justify-center overflow-hidden">
-                    {sp.status === 'online' ? (
-                      <WebRTCPlayer streamId={sp.id} token={localStorage.getItem('token')} isGrid={false} />
-                    ) : (
-                      <div className="flex flex-col items-center justify-center gap-2 text-slate-600">
-                        <Camera size={32} className="opacity-30" />
-                        <span className="text-xs text-slate-500">Stream tidak tersedia</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-                <div className="p-3">
-                  <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-200 dark:border-slate-700">
-                    <div className="relative w-8 h-8 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center">
-                      {sp.service_type === 'cctv' ? <Camera size={16} className="text-cyan-500" /> : sp.service_type === 'ip_speaker' ? <Megaphone size={16} className="text-amber-500" /> : <Server size={16} className="text-emerald-500" />}
-                      {sp.status && sp.status !== 'unknown' && (
-                        <span className={`absolute -bottom-1 -right-1 w-3 h-3 border-2 ${isDark ? 'border-slate-800' : 'border-white'} rounded-full ${sp.status === 'online' ? 'bg-emerald-500' : 'bg-rose-500'}`}></span>
-                      )}
-                    </div>
-                    <div className="flex-1 overflow-hidden">
-                      <p className="font-bold text-sm text-slate-800 dark:text-white truncate">{sp.name}</p>
-                      <p className="text-[10px] text-slate-500 capitalize">{sp.service_type.replace('_', ' ')}</p>
-                    </div>
-                  </div>
-                  <div className="space-y-1 text-xs">
-                    {sp.status && sp.status !== 'unknown' && (
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-500">Status</span>
-                        <span className={`font-medium px-2 py-0.5 rounded-full text-[10px] ${sp.status === 'online' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'}`}>
-                          {sp.status === 'online' ? 'Online' : 'Offline'}
-                        </span>
-                      </div>
-                    )}
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Lokasi</span>
-                      <span className="font-medium text-slate-700 dark:text-slate-300 text-right max-w-[140px] truncate">{sp.location}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Bandwidth</span>
-                      <span className="font-medium text-slate-700 dark:text-slate-300">{sp.bandwidth} Mbps</span>
-                    </div>
-                    {sp.ip_address && (
-                      <div className="flex justify-between">
-                        <span className="text-slate-500">IP</span>
-                        <span className="font-mono text-slate-700 dark:text-slate-300">{sp.ip_address}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
-      </MapContainer>
-
-      {/* Floating Header Panel - Command Center */}
-      <div className={`absolute top-4 left-4 z-[1000] p-4 rounded-xl shadow-2xl w-64 transition-all duration-300 ${isDark ? 'glass-panel' : 'glass-panel-light'}`}>
-        <h2 className={`font-bold flex items-center gap-2 mb-4 ${isDark ? 'text-white' : 'text-slate-800'}`}>
-          <Activity className="w-5 h-5 text-cyan-500" /> Command Center
-        </h2>
-        
-        <div className="space-y-1">
-          {['admin', 'am'].includes(user?.role) && (
-            <div 
-              onClick={() => toggleLayer('team')}
-              className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors ${visibleLayers.team ? (isDark ? 'bg-slate-800/50 hover:bg-slate-800' : 'bg-slate-100 hover:bg-slate-200') : (isDark ? 'hover:bg-slate-800/30 opacity-50' : 'hover:bg-slate-50 opacity-50')}`}
-            >
-              <div className="flex items-center gap-2">
-                <Users size={16} className={visibleLayers.team ? "text-rose-500" : "text-slate-500"} />
-                <span className={`text-sm font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>W Team Aktif</span>
-              </div>
-              <span className={`text-xs font-bold ${visibleLayers.team ? (isDark ? 'text-white' : 'text-slate-800') : 'text-slate-500'}`}>
-                {locations.length}
-              </span>
-            </div>
-          )}
-
-          <div 
-            onClick={() => toggleLayer('skpd')}
-            className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors ${visibleLayers.skpd ? (isDark ? 'bg-slate-800/50 hover:bg-slate-800' : 'bg-slate-100 hover:bg-slate-200') : (isDark ? 'hover:bg-slate-800/30 opacity-50' : 'hover:bg-slate-50 opacity-50')}`}
-          >
-            <div className="flex items-center gap-2">
-              <Server size={16} className={visibleLayers.skpd ? "text-emerald-500" : "text-slate-500"} />
-              <span className={`text-sm font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Internet SKPD</span>
-            </div>
-            <span className={`text-xs font-bold ${visibleLayers.skpd ? (isDark ? 'text-white' : 'text-slate-800') : 'text-slate-500'}`}>
-              {validServicePoints.filter(s => s.service_type === 'skpd').length}
-            </span>
-          </div>
-
-          <div 
-            onClick={() => toggleLayer('cctv')}
-            className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors ${visibleLayers.cctv ? (isDark ? 'bg-slate-800/50 hover:bg-slate-800' : 'bg-slate-100 hover:bg-slate-200') : (isDark ? 'hover:bg-slate-800/30 opacity-50' : 'hover:bg-slate-50 opacity-50')}`}
-          >
-            <div className="flex items-center gap-2">
-              <Camera size={16} className={visibleLayers.cctv ? "text-cyan-500" : "text-slate-500"} />
-              <span className={`text-sm font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Jaringan CCTV</span>
-            </div>
-            <span className={`text-xs font-bold ${visibleLayers.cctv ? (isDark ? 'text-white' : 'text-slate-800') : 'text-slate-500'}`}>
-              {validServicePoints.filter(s => s.service_type === 'cctv').length}
-            </span>
-          </div>
-
-          <div 
-            onClick={() => toggleLayer('ip_speaker')}
-            className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors ${visibleLayers.ip_speaker ? (isDark ? 'bg-slate-800/50 hover:bg-slate-800' : 'bg-slate-100 hover:bg-slate-200') : (isDark ? 'hover:bg-slate-800/30 opacity-50' : 'hover:bg-slate-50 opacity-50')}`}
-          >
-            <div className="flex items-center gap-2">
-              <Megaphone size={16} className={visibleLayers.ip_speaker ? "text-amber-500" : "text-slate-500"} />
-              <span className={`text-sm font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>IP Speaker</span>
-            </div>
-            <span className={`text-xs font-bold ${visibleLayers.ip_speaker ? (isDark ? 'text-white' : 'text-slate-800') : 'text-slate-500'}`}>
-              {validServicePoints.filter(s => s.service_type === 'ip_speaker').length}
-            </span>
-          </div>
-
+        {/* Label */}
+        <div className="flex items-center gap-1.5 shrink-0 pr-3 mr-1 border-r border-slate-300 dark:border-slate-700">
+          <Activity className="w-3.5 h-3.5 text-cyan-500" />
+          <span className={`text-[11px] font-bold whitespace-nowrap ${isDark ? 'text-white' : 'text-slate-700'}`}>Layers</span>
         </div>
+
+        {/* W Team - admin/am only */}
+        {['admin', 'am'].includes(user?.role) && (
+          <MobileLayerBtn
+            layer="team"
+            icon={Users}
+            label="W Team"
+            count={locations.length}
+            activeColor="text-rose-400"
+            activeBg="bg-rose-500/20"
+            activeBorder="border-rose-500/50"
+          />
+        )}
+
+        <MobileLayerBtn
+          layer="skpd"
+          icon={Server}
+          label="SKPD"
+          count={validServicePoints.filter(s => s.service_type === 'skpd').length}
+          activeColor="text-emerald-400"
+          activeBg="bg-emerald-500/20"
+          activeBorder="border-emerald-500/50"
+        />
+
+        <MobileLayerBtn
+          layer="cctv"
+          icon={Camera}
+          label="CCTV"
+          count={validServicePoints.filter(s => s.service_type === 'cctv').length}
+          activeColor="text-cyan-400"
+          activeBg="bg-cyan-500/20"
+          activeBorder="border-cyan-500/50"
+        />
+
+        <MobileLayerBtn
+          layer="ip_speaker"
+          icon={Megaphone}
+          label="IP Speaker"
+          count={validServicePoints.filter(s => s.service_type === 'ip_speaker').length}
+          activeColor="text-amber-400"
+          activeBg="bg-amber-500/20"
+          activeBorder="border-amber-500/50"
+        />
       </div>
 
+      {/* ===== MAP AREA ===== */}
+      <div className="relative flex-1 overflow-hidden rounded-b-2xl md:rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl">
+        <MapContainer
+          center={[-5.147665, 119.432731]}
+          zoom={13}
+          style={{ height: '100%', width: '100%' }}
+          zoomControl={false}
+        >
+          <TileLayer
+            key={theme}
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; OpenStreetMap contributors'
+            className={isDark ? "map-tiles-dark" : ""}
+          />
+          <ZoomControl position="topright" />
+
+          {/* Staff markers */}
+          {['admin', 'am'].includes(user?.role) && visibleLayers.team && locations.map((loc) => (
+            <Marker key={loc.user_id} position={[loc.latitude, loc.longitude]} icon={createStaffIcon(loc.username)}>
+              <Popup className="custom-popup">
+                <div className="p-2 min-w-[150px]">
+                  <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-200 dark:border-slate-700">
+                    <div className="w-8 h-8 bg-rose-100 dark:bg-rose-900/30 rounded-full flex items-center justify-center">
+                      <Users size={16} className="text-rose-600 dark:text-rose-400" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-sm text-slate-800 dark:text-white">{loc.full_name || loc.username}</p>
+                      <p className="text-[10px] text-slate-500">{new Date(loc.timestamp).toLocaleTimeString()}</p>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    {loc.battery_level && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-slate-500">Baterai</span>
+                        <span className="font-medium text-slate-700 dark:text-slate-300">{loc.battery_level}%</span>
+                      </div>
+                    )}
+                    {loc.speed !== undefined && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-slate-500">Kecepatan</span>
+                        <span className="font-medium text-slate-700 dark:text-slate-300">{Math.round(loc.speed * 3.6)} km/h</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
+
+          {/* Service point markers */}
+          {validServicePoints.filter(sp => {
+            if (sp.service_type === 'cctv' && !visibleLayers.cctv) return false;
+            if (sp.service_type === 'skpd' && !visibleLayers.skpd) return false;
+            if (sp.service_type === 'ip_speaker' && !visibleLayers.ip_speaker) return false;
+            return true;
+          }).map((sp) => (
+            <Marker key={sp.id} position={[sp.lat, sp.lng]} icon={createServiceIcon(sp.service_type, sp.name)}>
+              <Popup className="custom-popup" maxWidth={320} minWidth={240}>
+                <div className="w-full">
+                  {sp.service_type === 'cctv' && (
+                    <div className="w-full aspect-video bg-black relative flex items-center justify-center overflow-hidden">
+                      {sp.status === 'online' ? (
+                        <WebRTCPlayer streamId={sp.id} token={localStorage.getItem('token')} isGrid={false} />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center gap-2 text-slate-600">
+                          <Camera size={32} className="opacity-30" />
+                          <span className="text-xs text-slate-500">Stream tidak tersedia</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  <div className="p-3">
+                    <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-200 dark:border-slate-700">
+                      <div className="relative w-8 h-8 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center">
+                        {sp.service_type === 'cctv'
+                          ? <Camera size={16} className="text-cyan-500" />
+                          : sp.service_type === 'ip_speaker'
+                            ? <Megaphone size={16} className="text-amber-500" />
+                            : <Server size={16} className="text-emerald-500" />}
+                        {sp.status && sp.status !== 'unknown' && (
+                          <span className={`absolute -bottom-1 -right-1 w-3 h-3 border-2 ${isDark ? 'border-slate-800' : 'border-white'} rounded-full ${sp.status === 'online' ? 'bg-emerald-500' : 'bg-rose-500'}`}></span>
+                        )}
+                      </div>
+                      <div className="flex-1 overflow-hidden">
+                        <p className="font-bold text-sm text-slate-800 dark:text-white truncate">{sp.name}</p>
+                        <p className="text-[10px] text-slate-500 capitalize">{sp.service_type.replace('_', ' ')}</p>
+                      </div>
+                    </div>
+                    <div className="space-y-1 text-xs">
+                      {sp.status && sp.status !== 'unknown' && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-500">Status</span>
+                          <span className={`font-medium px-2 py-0.5 rounded-full text-[10px] ${sp.status === 'online' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'}`}>
+                            {sp.status === 'online' ? 'Online' : 'Offline'}
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Lokasi</span>
+                        <span className="font-medium text-slate-700 dark:text-slate-300 text-right max-w-[140px] truncate">{sp.location}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Bandwidth</span>
+                        <span className="font-medium text-slate-700 dark:text-slate-300">{sp.bandwidth} Mbps</span>
+                      </div>
+                      {sp.ip_address && (
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">IP</span>
+                          <span className="font-mono text-slate-700 dark:text-slate-300">{sp.ip_address}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
+        </MapContainer>
+
+        {/* ===== DESKTOP Floating Command Center (hidden on mobile) ===== */}
+        <div className={`hidden md:block absolute top-4 left-4 z-[1000] p-4 rounded-xl shadow-2xl w-64 transition-all duration-300 ${isDark ? 'glass-panel' : 'glass-panel-light'}`}>
+          <h2 className={`font-bold flex items-center gap-2 mb-4 ${isDark ? 'text-white' : 'text-slate-800'}`}>
+            <Activity className="w-5 h-5 text-cyan-500" /> Command Center
+          </h2>
+
+          <div className="space-y-1">
+            {['admin', 'am'].includes(user?.role) && (
+              <div
+                onClick={() => toggleLayer('team')}
+                className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors ${visibleLayers.team ? (isDark ? 'bg-slate-800/50 hover:bg-slate-800' : 'bg-slate-100 hover:bg-slate-200') : (isDark ? 'hover:bg-slate-800/30 opacity-50' : 'hover:bg-slate-50 opacity-50')}`}
+              >
+                <div className="flex items-center gap-2">
+                  <Users size={16} className={visibleLayers.team ? "text-rose-500" : "text-slate-500"} />
+                  <span className={`text-sm font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>W Team Aktif</span>
+                </div>
+                <span className={`text-xs font-bold ${visibleLayers.team ? (isDark ? 'text-white' : 'text-slate-800') : 'text-slate-500'}`}>{locations.length}</span>
+              </div>
+            )}
+
+            <div
+              onClick={() => toggleLayer('skpd')}
+              className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors ${visibleLayers.skpd ? (isDark ? 'bg-slate-800/50 hover:bg-slate-800' : 'bg-slate-100 hover:bg-slate-200') : (isDark ? 'hover:bg-slate-800/30 opacity-50' : 'hover:bg-slate-50 opacity-50')}`}
+            >
+              <div className="flex items-center gap-2">
+                <Server size={16} className={visibleLayers.skpd ? "text-emerald-500" : "text-slate-500"} />
+                <span className={`text-sm font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Internet SKPD</span>
+              </div>
+              <span className={`text-xs font-bold ${visibleLayers.skpd ? (isDark ? 'text-white' : 'text-slate-800') : 'text-slate-500'}`}>{validServicePoints.filter(s => s.service_type === 'skpd').length}</span>
+            </div>
+
+            <div
+              onClick={() => toggleLayer('cctv')}
+              className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors ${visibleLayers.cctv ? (isDark ? 'bg-slate-800/50 hover:bg-slate-800' : 'bg-slate-100 hover:bg-slate-200') : (isDark ? 'hover:bg-slate-800/30 opacity-50' : 'hover:bg-slate-50 opacity-50')}`}
+            >
+              <div className="flex items-center gap-2">
+                <Camera size={16} className={visibleLayers.cctv ? "text-cyan-500" : "text-slate-500"} />
+                <span className={`text-sm font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Jaringan CCTV</span>
+              </div>
+              <span className={`text-xs font-bold ${visibleLayers.cctv ? (isDark ? 'text-white' : 'text-slate-800') : 'text-slate-500'}`}>{validServicePoints.filter(s => s.service_type === 'cctv').length}</span>
+            </div>
+
+            <div
+              onClick={() => toggleLayer('ip_speaker')}
+              className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors ${visibleLayers.ip_speaker ? (isDark ? 'bg-slate-800/50 hover:bg-slate-800' : 'bg-slate-100 hover:bg-slate-200') : (isDark ? 'hover:bg-slate-800/30 opacity-50' : 'hover:bg-slate-50 opacity-50')}`}
+            >
+              <div className="flex items-center gap-2">
+                <Megaphone size={16} className={visibleLayers.ip_speaker ? "text-amber-500" : "text-slate-500"} />
+                <span className={`text-sm font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>IP Speaker</span>
+              </div>
+              <span className={`text-xs font-bold ${visibleLayers.ip_speaker ? (isDark ? 'text-white' : 'text-slate-800') : 'text-slate-500'}`}>{validServicePoints.filter(s => s.service_type === 'ip_speaker').length}</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
     </div>
   );
 };
