@@ -18,6 +18,7 @@ import base64
 import httpx
 import io
 import json
+import subprocess
 
 import asyncio
 import time
@@ -340,6 +341,7 @@ class ServicePointUpdate(BaseModel):
     address: Optional[str] = None
     bandwidth: Optional[float] = None
     ip_address: Optional[str] = None
+    coordinates: Optional[str] = None
     is_active: Optional[bool] = None
     cctv_username: Optional[str] = None
     cctv_password: Optional[str] = None
@@ -693,8 +695,158 @@ async def update_site_settings(user: dict = Depends(get_current_user)):
 
 # ============ CHAT ============
 
+@api_router.post("/chat/send-file")
+async def send_chat_file(
+    to_user_id: str = Form(...),
+    message: str = Form(""),
+    file: UploadFile = File(...),
+    user: dict = Depends(get_current_user)
+):
+    file_id = str(uuid.uuid4())
+    ext = file.filename.split('.')[-1] if '.' in file.filename else ''
+    filename = f"chat_{file_id}_{int(datetime.now().timestamp())}.{ext}" if ext else f"chat_{file_id}_{int(datetime.now().timestamp())}"
+    filepath = os.path.join(UPLOAD_DIR, filename)
+
+    try:
+        with open(filepath, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Gagal mengupload file chat")
+
+    attachment_url = f"/api/uploads/{filename}"
+    attachment_type = file.content_type
+
+    if to_user_id == 'global':
+        conversation_id = "global"
+        to_name = "Global Room"
+        
+        chat_doc = {
+            "id": str(uuid.uuid4()),
+            "conversation_id": conversation_id,
+            "from_id": user['id'],
+            "from_name": user.get('full_name', user['username']),
+            "from_role": user['role'],
+            "to_id": to_user_id,
+            "to_name": to_name,
+            "message": message,
+            "attachment_url": attachment_url,
+            "attachment_type": attachment_type,
+            "read": False,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.chats.insert_one(chat_doc)
+        
+        asyncio.create_task(ws_manager.broadcast({
+            "type": "chat_message_global",
+            "from_name": user.get('full_name', user['username']),
+            "message": message,
+            "attachment_url": attachment_url
+        }))
+        
+        return {"message": "Pesan beserta file berhasil dikirim", "chat_id": chat_doc['id']}
+
+    # Direct messages
+    to_user = await db.users.find_one({"id": to_user_id}, {"_id": 0, "password": 0})
+    if not to_user:
+        raise HTTPException(status_code=404, detail="User tujuan tidak ditemukan")
+    
+    if to_user['role'] == 'admin' and user['role'] != 'am':
+        raise HTTPException(status_code=403, detail="Tidak dapat mengirim pesan ke admin")
+        
+    conversation_id = get_conversation_id(user['id'], to_user_id)
+    
+    chat_doc = {
+        "id": str(uuid.uuid4()),
+        "conversation_id": conversation_id,
+        "from_id": user['id'],
+        "from_name": user.get('full_name', user['username']),
+        "from_role": user['role'],
+        "to_id": to_user_id,
+        "to_name": to_user.get('full_name', to_user['username']),
+        "message": message,
+        "attachment_url": attachment_url,
+        "attachment_type": attachment_type,
+        "read": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.chats.insert_one(chat_doc)
+    
+    asyncio.create_task(ws_manager.send_personal_message(
+        {
+            "type": "chat_message",
+            "from_id": user['id'],
+            "from_name": user.get('full_name', user['username']),
+            "message": message,
+            "attachment_url": attachment_url
+        },
+        to_user_id
+    ))
+    
+    return {"message": "Pesan dan file berhasil dikirim", "chat_id": chat_doc['id']}
+
+@api_router.delete("/chat/messages/global/{message_id}")
+async def delete_global_chat_message(message_id: str, user: dict = Depends(get_current_user)):
+    if user['role'] not in ['admin', 'am']:
+        raise HTTPException(status_code=403, detail="Hanya Admin dan AM yang dapat menghapus pesan global")
+    
+    chat = await db.chats.find_one({"id": message_id, "conversation_id": "global"})
+    if not chat:
+        raise HTTPException(status_code=404, detail="Pesan tidak ditemukan")
+    
+    if 'attachment_url' in chat and chat['attachment_url']:
+        filename = chat['attachment_url'].split('/')[-1]
+        if chat['attachment_url'].startswith('/ptt_audio/'):
+            filepath = os.path.join(PTT_DIR, filename)
+        else:
+            filepath = os.path.join(UPLOAD_DIR, filename)
+        if os.path.exists(filepath):
+            try:
+                os.remove(filepath)
+            except Exception:
+                pass
+
+    result = await db.chats.delete_one({"id": message_id, "conversation_id": "global"})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=500, detail="Gagal menghapus pesan")
+        
+    asyncio.create_task(ws_manager.broadcast({
+        "type": "chat_message_deleted",
+        "message_id": message_id
+    }))
+
+    return {"message": "Pesan berhasil dihapus"}
+
 @api_router.post("/chat/send")
 async def send_chat(msg: ChatMessage, user: dict = Depends(get_current_user)):
+    if msg.to_user_id == 'global':
+        conversation_id = "global"
+        to_name = "Global Room"
+        
+        chat_doc = {
+            "id": str(uuid.uuid4()),
+            "conversation_id": conversation_id,
+            "from_id": user['id'],
+            "from_name": user.get('full_name', user['username']),
+            "from_role": user['role'],
+            "to_id": msg.to_user_id,
+            "to_name": to_name,
+            "message": msg.message,
+            "read": False,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.chats.insert_one(chat_doc)
+        
+        asyncio.create_task(ws_manager.broadcast({
+            "type": "chat_message_global",
+            "from_name": user.get('full_name', user['username']),
+            "message": msg.message
+        }))
+        
+        return {"message": "Pesan berhasil dikirim", "chat_id": chat_doc['id']}
+
     to_user = await db.users.find_one({"id": msg.to_user_id}, {"_id": 0, "password": 0})
     if not to_user:
         raise HTTPException(status_code=404, detail="User tujuan tidak ditemukan")
@@ -757,18 +909,22 @@ async def get_conversations(user: dict = Depends(get_current_user)):
 
 @api_router.get("/chat/messages/{other_user_id}")
 async def get_chat_messages(other_user_id: str, user: dict = Depends(get_current_user)):
-    participants = sorted([user['id'], other_user_id])
-    conversation_id = f"{participants[0]}_{participants[1]}"
+    if other_user_id == 'global':
+        conversation_id = "global"
+    else:
+        participants = sorted([user['id'], other_user_id])
+        conversation_id = f"{participants[0]}_{participants[1]}"
     
     messages = await db.chats.find(
         {"conversation_id": conversation_id},
         {"_id": 0}
     ).sort("created_at", 1).to_list(1000)
     
-    await db.chats.update_many(
-        {"conversation_id": conversation_id, "to_id": user['id'], "read": False},
-        {"$set": {"read": True}}
-    )
+    if other_user_id != 'global':
+        await db.chats.update_many(
+            {"conversation_id": conversation_id, "to_id": user['id'], "read": False},
+            {"$set": {"read": True}}
+        )
     
     return {"messages": messages}
 
@@ -973,6 +1129,51 @@ async def daily_report(
     report.pop('_id', None)
     return {"message": "Berhasil submit laporan harian", "report": report}
 
+@api_router.get("/attendance/daily-reports")
+async def get_daily_reports(user: dict = Depends(get_current_user)):
+    query = {}
+    if user.get('role') not in ['admin', 'am']:
+        query = {"user_id": user['id']}
+        
+    cursor = db.daily_reports.find(query).sort("timestamp", -1).limit(200)
+    reports = await cursor.to_list(length=200)
+    for report in reports:
+        report["_id"] = str(report["_id"])
+    return reports
+
+@api_router.delete("/attendance/daily-reports/{report_id}")
+async def delete_daily_report(report_id: str, user: dict = Depends(get_current_user)):
+    if user.get('role') not in ['admin', 'am']:
+        raise HTTPException(status_code=403, detail="Hanya admin/AM yang dapat menghapus data")
+    
+    # Try finding the document directly by string id or objectId (in case the ID type varies)
+    report = await db.daily_reports.find_one({"id": report_id})
+    if not report:
+        from bson.objectid import ObjectId
+        try:
+            report = await db.daily_reports.find_one({"_id": ObjectId(report_id)})
+        except:
+            pass
+            
+    if not report:
+        raise HTTPException(status_code=404, detail="Data tidak ditemukan")
+        
+    # Delete image if exists
+    if report.get("evidence_url"):
+        filename = report["evidence_url"].split("/")[-1]
+        filepath = UPLOAD_DIR / filename
+        if os.path.exists(filepath):
+            try:
+                os.remove(filepath)
+            except Exception as e:
+                logger.error(f"Failed to delete evidence file {filepath}: {e}")
+                
+    result = await db.daily_reports.delete_one({"_id": report["_id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Gagal menghapus data")
+        
+    return {"message": "Data berhasil dihapus"}
+
 @api_router.post("/attendance/ping")
 async def location_ping(
     data: LocationLogCreate,
@@ -993,6 +1194,10 @@ async def location_ping(
 
 @api_router.get("/attendance/live-locations")
 async def get_live_locations(user: dict = Depends(get_current_user)):
+    # Standard staff cannot see live locations
+    if user.get("role") not in ["admin", "am"]:
+        return []
+
     pipeline = [
         {"$sort": {"timestamp": -1}},
         {"$group": {
@@ -1004,36 +1209,136 @@ async def get_live_locations(user: dict = Depends(get_current_user)):
             "longitude": {"$first": "$longitude"},
             "battery_level": {"$first": "$battery_level"},
             "timestamp": {"$first": "$timestamp"}
-        }}
+        }},
+        {"$lookup": {
+            "from": "users",
+            "localField": "user_id",
+            "foreignField": "id",
+            "as": "user_info"
+        }},
+        {"$unwind": {"path": "$user_info", "preserveNullAndEmptyArrays": True}},
+        {"$addFields": {"role": "$user_info.role"}},
+        {"$project": {"user_info": 0}}
     ]
     cursor = db.location_logs.aggregate(pipeline)
     locations = await cursor.to_list(length=100)
+    
+    filtered_locations = []
     for loc in locations:
         loc.pop("_id", None)
-    return locations
+        
+        # Rule: Admin sees everyone
+        if user.get("role") == "admin":
+            filtered_locations.append(loc)
+        
+        # Rule: AM sees everyone EXCEPT themselves and other AMs
+        elif user.get("role") == "am":
+            if loc.get("role") != "am" and loc["user_id"] != user["id"]:
+                filtered_locations.append(loc)
+                
+    return filtered_locations
+
+@api_router.get("/attendance/route-history")
+async def get_route_history(user: dict = Depends(get_current_user)):
+    if user.get("role") not in ["admin", "am"]:
+        return []
+
+    now = datetime.utcnow()
+    start_of_day = now.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+
+    pipeline = [
+        {"$match": {"timestamp": {"$gte": start_of_day}}},
+        {"$sort": {"timestamp": 1}},
+        {"$group": {
+            "_id": "$user_id",
+            "username": {"$first": "$username"},
+            "full_name": {"$first": "$full_name"},
+            "route": {
+                "$push": {
+                    "latitude": "$latitude",
+                    "longitude": "$longitude",
+                    "timestamp": "$timestamp",
+                    "battery_level": "$battery_level",
+                    "speed": "$speed"
+                }
+            }
+        }},
+        {"$lookup": {
+            "from": "users",
+            "localField": "_id",
+            "foreignField": "id",
+            "as": "user_info"
+        }},
+        {"$unwind": {"path": "$user_info", "preserveNullAndEmptyArrays": True}},
+        {"$addFields": {"role": "$user_info.role"}},
+        {"$project": {"user_info": 0}}
+    ]
+    cursor = db.location_logs.aggregate(pipeline)
+    routes = await cursor.to_list(length=100)
+    
+    for r in routes:
+        r["user_id"] = r.pop("_id", None)
+        
+    return routes
 
 @api_router.get("/attendance/logs")
 async def get_attendance_logs(user: dict = Depends(get_current_user)):
-    cursor = db.attendance_logs.find().sort("timestamp", -1).limit(200)
+    query = {}
+    if user.get('role') not in ['admin', 'am']:
+        query = {"user_id": user['id']}
+    
+    cursor = db.attendance_logs.find(query).sort("timestamp", -1).limit(200)
     logs = await cursor.to_list(length=200)
     for log in logs:
         log["_id"] = str(log["_id"])
-        
-        # Attach daily report if type is clock_out
-        if log.get("type") == "clock_out":
-            # format timestamp to date string YYYY-MM-DD
-            try:
-                date_obj = datetime.fromisoformat(log["timestamp"].replace('Z', '+00:00'))
-                date_str = date_obj.strftime("%Y-%m-%d")
-                
-                report = await db.daily_reports.find_one({"user_id": log["user_id"], "date": date_str})
-                if report:
-                    log["report_text"] = report.get("report_text")
-                    log["evidence_url"] = report.get("evidence_url")
-            except Exception as e:
-                pass
-                
     return logs
+
+@api_router.delete("/attendance/logs/{log_id}")
+async def delete_attendance_log(log_id: str, user: dict = Depends(get_current_user)):
+    if user.get('role') != 'admin':
+        raise HTTPException(status_code=403, detail="Hanya admin yang dapat menghapus data")
+    
+    from bson.objectid import ObjectId
+    import os
+    
+    try:
+        obj_id = ObjectId(log_id)
+    except:
+        raise HTTPException(status_code=400, detail="Invalid log ID")
+
+    log = await db.attendance_logs.find_one({"_id": obj_id})
+    if not log:
+        raise HTTPException(status_code=404, detail="Data tidak ditemukan")
+
+    # Delete photo if exists
+    if log.get("photo_url"):
+        file_path = os.path.join(UPLOAD_DIR, os.path.basename(log["photo_url"]))
+        if os.path.exists(file_path):
+            try:
+                os.remove(file_path)
+            except Exception as e:
+                logger.error(f"Failed to delete photo {file_path}: {e}")
+            
+    # Also delete associated daily report and its evidence if clock_out
+    if log.get("type") == "clock_out":
+        try:
+            date_obj = datetime.fromisoformat(log["timestamp"].replace('Z', '+00:00'))
+            date_str = date_obj.strftime("%Y-%m-%d")
+            report = await db.daily_reports.find_one({"user_id": log["user_id"], "date": date_str})
+            if report:
+                if report.get("evidence_url"):
+                    rep_file = os.path.join(UPLOAD_DIR, os.path.basename(report["evidence_url"]))
+                    if os.path.exists(rep_file):
+                        try:
+                            os.remove(rep_file)
+                        except Exception as e:
+                            logger.error(f"Failed to delete report evidence {rep_file}: {e}")
+                await db.daily_reports.delete_one({"_id": report["_id"]})
+        except Exception as e:
+            logger.error(f"Error deleting daily report: {e}")
+
+    await db.attendance_logs.delete_one({"_id": obj_id})
+    return {"message": "Data berhasil dihapus"}
 
 # ============ USER MANAGEMENT ROUTES ============
 
@@ -1119,12 +1424,21 @@ async def get_eos_users(user: dict = Depends(get_current_user)):
 # ============ SERVICE POINTS ============
 
 @api_router.get("/service-points")
-async def get_service_points(service_type: str = None, user: dict = Depends(get_current_user)):
+async def get_service_points(service_type: str = None, include_status: bool = False, user: dict = Depends(get_current_user)):
     query = {}
     if service_type:
         query['service_type'] = service_type
     
     points = await db.service_points.find(query, {"_id": 0}).to_list(1000)
+    
+    if include_status:
+        for p in points:
+            latest_ping = await db.ping_results.find_one(
+                {"service_point_id": p['id']},
+                sort=[("timestamp", -1)]
+            )
+            p['status'] = latest_ping.get('status', 'unknown') if latest_ping else 'unknown'
+            
     return {"points": points}
 
 @api_router.post("/service-points")
@@ -1162,7 +1476,7 @@ async def update_service_point(point_id: str, update: ServicePointUpdate, user: 
         raise HTTPException(status_code=400, detail="Tidak ada data yang diubah")
     
     result = await db.service_points.update_one({"id": point_id}, {"$set": update_dict})
-    if result.modified_count == 0:
+    if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Titik layanan tidak ditemukan")
     
     return {"message": "Titik layanan berhasil diupdate"}
@@ -4266,10 +4580,6 @@ async def root():
 
 @api_router.get("/admin/who-is-online")
 async def get_online_users(user: dict = Depends(get_current_user)):
-    # BUKA IZIN UNTUK ADMIN DAN AM DI SINI
-    if user['role'] not in ['admin', 'am']:
-        raise HTTPException(status_code=403, detail="Cuma Boska Admin dan AM yang bisa intip!")
-    
     online_data = []
     for uid, detail in ws_manager.user_details.items():
         sessions = len(ws_manager.active_connections.get(uid, []))
@@ -4288,18 +4598,40 @@ async def upload_ptt_audio(audio_file: UploadFile = File(...), user: dict = Depe
     try:
         timestamp = int(datetime.utcnow().timestamp())
         file_extension = audio_file.filename.split('.')[-1]
-        filename = f"ptt_{user['_id']}_{timestamp}.{file_extension}"
-        file_path = PTT_DIR / filename
         
-        with open(file_path, "wb") as buffer:
+        # Simpan file sementara (webm/mp4 dari browser)
+        temp_filename = f"temp_ptt_{user['id']}_{timestamp}.{file_extension}"
+        temp_path = PTT_DIR / temp_filename
+        
+        with open(temp_path, "wb") as buffer:
             shutil.copyfileobj(audio_file.file, buffer)
             
+        # Konversi ke MP3 menggunakan FFmpeg agar didukung oleh semua browser termasuk iOS Safari
+        final_filename = f"ptt_{user['id']}_{timestamp}.mp3"
+        final_path = PTT_DIR / final_filename
+        
+        try:
+            subprocess.run([
+                "ffmpeg", "-y", "-i", str(temp_path),
+                "-acodec", "libmp3lame", "-b:a", "128k", str(final_path)
+            ], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            
+            # Hapus file temporary
+            if temp_path.exists():
+                temp_path.unlink()
+        except Exception as e:
+            logger.error(f"FFmpeg conversion failed: {e}")
+            # Jika ffmpeg gagal, gunakan file aslinya
+            final_filename = f"ptt_{user['id']}_{timestamp}.{file_extension}"
+            final_path = PTT_DIR / final_filename
+            shutil.move(str(temp_path), str(final_path))
+            
         # Broadcast the audio URL to all active connections
-        audio_url = f"/ptt_audio/{filename}"
+        audio_url = f"/ptt_audio/{final_filename}"
         await ws_manager.broadcast({
             "type": "ptt_audio",
             "url": audio_url,
-            "sender_id": str(user['_id']),
+            "sender_id": str(user['id']),
             "sender_name": user.get('full_name', 'Unknown'),
             "sender_role": user.get('role', 'Unknown')
         })
@@ -4336,6 +4668,93 @@ async def seed_database():
         logger.error(f"Seed error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+class LocationUpdate(BaseModel):
+    latitude: float
+    longitude: float
+
+@api_router.post("/location/update")
+async def update_location(data: LocationUpdate, user: dict = Depends(get_current_user)):
+    try:
+        user_id = user["id"]
+        
+        now_str = datetime.utcnow().isoformat()
+        
+        # Save to locations collection
+        location_record = {
+            "id": str(uuid.uuid4()),
+            "user_id": user_id,
+            "full_name": user.get("full_name", "Unknown"),
+            "role": user.get("role", "eos"),
+            "latitude": data.latitude,
+            "longitude": data.longitude,
+            "timestamp": now_str
+        }
+        
+        await db.locations.insert_one(location_record)
+        return {"status": "success", "message": "Location updated"}
+    except Exception as e:
+        logger.error(f"Error updating location: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@api_router.get("/location/latest")
+async def get_latest_locations(user: dict = Depends(get_current_user)):
+    try:
+        # Get the latest location for each user
+        # We can use aggregation to group by user_id and get the latest
+        pipeline = [
+            {"$sort": {"timestamp": -1}},
+            {"$group": {
+                "_id": "$user_id",
+                "full_name": {"$first": "$full_name"},
+                "role": {"$first": "$role"},
+                "latitude": {"$first": "$latitude"},
+                "longitude": {"$first": "$longitude"},
+                "timestamp": {"$first": "$timestamp"}
+            }}
+        ]
+        latest_locations = []
+        async for doc in db.locations.aggregate(pipeline):
+            doc["user_id"] = doc.pop("_id")
+            latest_locations.append(doc)
+            
+        return {"status": "success", "data": latest_locations}
+    except Exception as e:
+        logger.error(f"Error getting latest locations: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@api_router.get("/location/history")
+async def get_location_history(user: dict = Depends(get_current_user)):
+    try:
+        # Ambil data rute untuk hari ini saja
+        now = datetime.utcnow()
+        start_of_day = now.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+        
+        pipeline = [
+            {"$match": {"timestamp": {"$gte": start_of_day}}},
+            {"$sort": {"timestamp": 1}}, # Urutkan dari yang paling awal ke yang terbaru untuk rute
+            {"$group": {
+                "_id": "$user_id",
+                "full_name": {"$first": "$full_name"},
+                "role": {"$first": "$role"},
+                "route": {
+                    "$push": {
+                        "latitude": "$latitude",
+                        "longitude": "$longitude",
+                        "timestamp": "$timestamp"
+                    }
+                }
+            }}
+        ]
+        history = []
+        async for doc in db.locations.aggregate(pipeline):
+            doc["user_id"] = doc.pop("_id")
+            history.append(doc)
+            
+        return {"status": "success", "data": history}
+    except Exception as e:
+        logger.error(f"Error getting location history: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
 app.include_router(api_router)
 
 @app.on_event("startup")
@@ -4349,6 +4768,9 @@ async def startup_event():
     await db.tickets.create_index([("service_type", 1)])
     await db.tickets.create_index([("client_id", 1)])
     await db.tickets.create_index([("assigned_to", 1)])
+    
+    # --- TAMBAHAN INDEX BARU UNTUK LOCATIONS ---
+    await db.locations.create_index([("user_id", 1), ("timestamp", -1)])
     
     asyncio.create_task(_ping_scheduler())
     asyncio.create_task(sync_mediamtx_config())

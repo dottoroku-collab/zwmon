@@ -7,6 +7,7 @@ import '../providers/auth_provider.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/glass_container.dart';
+import '../services/image_service.dart';
 
 class DailyReportScreen extends StatefulWidget {
   const DailyReportScreen({super.key});
@@ -29,15 +30,10 @@ class _DailyReportScreenState extends State<DailyReportScreen> {
 
   Future<void> _pickImage(ImageSource source) async {
     try {
-      final XFile? image = await _picker.pickImage(
-        source: source,
-        imageQuality: 50, // Massive compression
-        maxWidth: 1024,
-        maxHeight: 1024,
-      );
-      if (image != null) {
+      final File? compressedImage = await ImageService.pickAndCompressImage(source);
+      if (compressedImage != null) {
         setState(() {
-          _selectedImage = File(image.path);
+          _selectedImage = compressedImage;
         });
       }
     } catch (e) {

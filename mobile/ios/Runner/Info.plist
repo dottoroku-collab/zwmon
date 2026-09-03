@@ -76,5 +76,12 @@
 	<string>Aplikasi ZWMON membutuhkan akses lokasi untuk fitur absensi berbasis GPS.</string>
 	<key>NSLocationAlwaysUsageDescription</key>
 	<string>Aplikasi ZWMON membutuhkan akses lokasi di latar belakang untuk pelacakan lokasi secara berkala.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Aplikasi ZWMON membutuhkan akses lokasi di latar belakang untuk pelacakan lokasi secara berkala.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+		<string>fetch</string>
+	</array>
 </dict>
 </plist>

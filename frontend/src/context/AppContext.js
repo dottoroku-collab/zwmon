@@ -96,8 +96,12 @@ export const AppProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
   }, [theme]);
 
   const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
@@ -171,7 +175,9 @@ export const AppProvider = ({ children }) => {
     if (!token || !BACKEND_URL) return;
     
     const connectWS = () => {
-      const wsUrl = BACKEND_URL.replace(/^http/, 'ws') + `/ws/${token}`;
+      const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+      const baseWsUrl = BACKEND_URL ? BACKEND_URL.replace(/^https?/, wsProtocol) : `${wsProtocol}://${window.location.host}`;
+      const wsUrl = `${baseWsUrl}/ws/${token}`;
       
       try { 
         const ws = new WebSocket(wsUrl);
@@ -308,11 +314,19 @@ export const AppProvider = ({ children }) => {
     sendChat: (to_user_id, message) => axios.post(`${API}/chat/send`, { to_user_id, message }),
     getConversations: () => axios.get(`${API}/chat/conversations`),
     getChatMessages: (userId) => axios.get(`${API}/chat/messages/${userId}`),
+    sendMessage: (data) => axios.post(`${API}/chat/send`, data),
+    sendChatFile: (formData) => axios.post(`${API}/chat/send-file`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    }),
+    deleteGlobalChatMessage: (id) => axios.delete(`${API}/chat/messages/global/${id}`),
     getChatUsers: () => axios.get(`${API}/chat/users`),
     deleteConversation: (userId) => axios.delete(`${API}/chat/conversations/${userId}`),
     submitLogbook: (data) => axios.post(`${API}/logbook`, data),
     getLogbook: (ticketId) => axios.get(`${API}/logbook/${ticketId}`),
     submitReview: (data) => axios.post(`${API}/review`, data),
+    deleteAttendanceLog: (id) => axios.delete(`${API}/attendance/logs/${id}`),
+    getDailyReports: () => axios.get(`${API}/attendance/daily-reports`),
+    deleteDailyReport: (id) => axios.delete(`${API}/attendance/daily-reports/${id}`),
     getSettings: () => axios.get(`${API}/settings`),
     updateSettings: (key, value) => axios.post(`${API}/settings`, { key, value }),
     getDashboardStats: (params) => axios.get(`${API}/dashboard/stats`, { params }),

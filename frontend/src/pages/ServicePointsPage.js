@@ -1,4 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 import { useApp } from '../context/AppContext';
 import { toast } from 'sonner';
 import { 
@@ -48,6 +51,24 @@ import {
   TabsTrigger,
 } from "../components/ui/tabs";
 
+const defaultIcon = new L.Icon({
+  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+function MapEvents({ onLocationSelect }) {
+  useMapEvents({
+    click(e) {
+      onLocationSelect(e.latlng);
+    }
+  });
+  return null;
+}
+
 const serviceConfig = {
   cctv: { label: 'Jaringan CCTV', icon: Camera, color: 'cyan', totalBw: 4900, defaultBw: 10 },
   skpd: { label: 'Internet SKPD', icon: Server, color: 'emerald', totalBw: 5500, defaultBw: 50 },
@@ -68,6 +89,8 @@ const ServicePointsPage = () => {
   const [selectedPoint, setSelectedPoint] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false); // Toggle visibility password CCTV
+  const [showMapPicker, setShowMapPicker] = useState(false);
+  const [tempCoord, setTempCoord] = useState(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -116,6 +139,17 @@ const ServicePointsPage = () => {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleMapLocationSelect = (latlng) => {
+    setTempCoord(latlng);
+  };
+
+  const confirmMapLocation = () => {
+    if (tempCoord) {
+      setFormData({ ...formData, coordinates: `${tempCoord.lat}, ${tempCoord.lng}` });
+      setShowMapPicker(false);
+    }
   };
 
   const openAddModal = (serviceType = 'cctv') => {
@@ -194,7 +228,8 @@ const ServicePointsPage = () => {
         location: formData.location,
         address: formData.address,
         bandwidth: parseFloat(formData.bandwidth),
-        ip_address: formData.ip_address
+        ip_address: formData.ip_address,
+        coordinates: formData.coordinates
       };
 
       if (formData.service_type === 'cctv') {
@@ -451,6 +486,15 @@ const ServicePointsPage = () => {
               <Label className="text-slate-300">Alamat Lengkap</Label>
               <Input name="address" value={formData.address} onChange={handleChange} className="input-dark h-11 text-white" placeholder="Contoh: Jl. Airport No. 1" />
             </div>
+            <div className="space-y-2">
+              <Label className="text-slate-300">Koordinat Peta (Lat, Lng)</Label>
+              <div className="flex gap-2">
+                <Input name="coordinates" value={formData.coordinates} onChange={handleChange} className="input-dark h-11 text-white flex-1" placeholder="-5.1476, 119.4327" />
+                <Button type="button" variant="outline" className="h-11 border-slate-700 bg-slate-800 text-slate-300 hover:text-white" onClick={() => setShowMapPicker(true)}>
+                  <MapPin className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-slate-300">Bandwidth (Mbps) *</Label>
@@ -548,6 +592,15 @@ const ServicePointsPage = () => {
               <Input name="address" value={formData.address} onChange={handleChange} className="input-dark h-11 text-white" />
             </div>
             <div className="space-y-2">
+              <Label className="text-slate-300">Koordinat Peta (Lat, Lng)</Label>
+              <div className="flex gap-2">
+                <Input name="coordinates" value={formData.coordinates} onChange={handleChange} className="input-dark h-11 text-white flex-1" placeholder="-5.1476, 119.4327" />
+                <Button type="button" variant="outline" className="h-11 border-slate-700 bg-slate-800 text-slate-300 hover:text-white" onClick={() => setShowMapPicker(true)}>
+                  <MapPin className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+            <div className="space-y-2">
               <Label className="text-slate-300">IP Address</Label>
               <Input name="ip_address" value={formData.ip_address} onChange={handleChange} className="input-dark h-11 text-white font-mono" />
             </div>
@@ -626,6 +679,33 @@ const ServicePointsPage = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Map Picker Dialog */}
+      <Dialog open={showMapPicker} onOpenChange={setShowMapPicker}>
+        <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-4xl p-0">
+          <DialogHeader className="p-4 border-b border-slate-800">
+            <DialogTitle>Pilih Lokasi di Peta</DialogTitle>
+          </DialogHeader>
+          <div className="h-[60vh] w-full relative">
+            <MapContainer 
+              center={tempCoord || [-5.147665, 119.432732]} 
+              zoom={13} 
+              className="h-full w-full z-0"
+            >
+              <TileLayer 
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                className="map-tiles-dark"
+              />
+              <MapEvents onLocationSelect={handleMapLocationSelect} />
+              {tempCoord && <Marker position={tempCoord} icon={defaultIcon} />}
+            </MapContainer>
+          </div>
+          <div className="p-4 border-t border-slate-800 flex justify-end gap-3">
+            <Button variant="outline" onClick={() => setShowMapPicker(false)} className="border-slate-700">Batal</Button>
+            <Button onClick={confirmMapLocation} className="bg-cyan-600 hover:bg-cyan-700">Pilih Koordinat Ini</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import '../services/location_service.dart';
 
 class AuthProvider with ChangeNotifier {
   bool _isAuthenticated = false;
@@ -21,6 +22,9 @@ class AuthProvider with ChangeNotifier {
     if (token != null) {
       _isAuthenticated = true;
       // In a real app we might fetch user profile here
+      
+      // Start tracking location
+      LocationService().startTracking(ApiService.baseUrl, token);
     }
     _isLoading = false;
     notifyListeners();
@@ -36,6 +40,12 @@ class AuthProvider with ChangeNotifier {
         _userName = data['user']['full_name'] ?? data['user']['username'];
         _userRole = data['user']['role'];
       }
+      
+      final token = await ApiService.getToken();
+      if (token != null) {
+        LocationService().startTracking(ApiService.baseUrl, token);
+      }
+
       _isLoading = false;
       notifyListeners();
       return true;
@@ -51,6 +61,10 @@ class AuthProvider with ChangeNotifier {
     _isAuthenticated = false;
     _userName = null;
     _userRole = null;
+    
+    // Stop tracking location
+    LocationService().stopTracking();
+    
     notifyListeners();
   }
 }

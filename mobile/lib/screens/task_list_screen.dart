@@ -71,38 +71,39 @@ class TaskListScreenState extends State<TaskListScreen> {
             icon: const Icon(Icons.refresh),
             onPressed: _fetchTasks,
           ),
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              if (value == 'register_face') {
-                context.push('/register-face');
-              } else if (value == 'clock_in') {
-                context.push('/clock-in');
-              } else if (value == 'daily_report') {
-                context.push('/daily-report');
-              } else if (value == 'clock_out') {
-                context.push('/clock-out');
-              }
-            },
-            itemBuilder: (BuildContext context) => [
-              const PopupMenuItem(
-                value: 'register_face',
-                child: Text('Daftarkan Wajah (Awal)'),
-              ),
-              const PopupMenuItem(
-                value: 'clock_in',
-                child: Text('Clock In (Absen Masuk)'),
-              ),
-              const PopupMenuItem(
-                value: 'daily_report',
-                child: Text('Laporan Pekerjaan Hari Ini'),
-              ),
-              const PopupMenuItem(
-                value: 'clock_out',
-                child: Text('Clock Out (Absen Keluar)'),
-              ),
-            ],
-            icon: const Icon(Icons.co_present),
-          ),
+          if (auth.userRole != 'am' && auth.userRole != 'admin')
+            PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == 'register_face') {
+                  context.push('/register-face');
+                } else if (value == 'clock_in') {
+                  context.push('/clock-in');
+                } else if (value == 'daily_report') {
+                  context.push('/daily-report');
+                } else if (value == 'clock_out') {
+                  context.push('/clock-out');
+                }
+              },
+              itemBuilder: (BuildContext context) => [
+                const PopupMenuItem(
+                  value: 'register_face',
+                  child: Text('Daftarkan Wajah (Awal)'),
+                ),
+                const PopupMenuItem(
+                  value: 'clock_in',
+                  child: Text('Clock In (Absen Masuk)'),
+                ),
+                const PopupMenuItem(
+                  value: 'daily_report',
+                  child: Text('Laporan Pekerjaan Hari Ini'),
+                ),
+                const PopupMenuItem(
+                  value: 'clock_out',
+                  child: Text('Clock Out (Absen Keluar)'),
+                ),
+              ],
+              icon: const Icon(Icons.co_present),
+            ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () {

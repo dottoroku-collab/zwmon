@@ -11,10 +11,13 @@ export const useWebSocket = (token, onMessage, backendUrl) => {
   const reconnectTimer = useRef(null);
 
   const connect = useCallback(() => {
-    if (!token || !backendUrl) return;
+    if (!token) return;
     
     // Convert http(s) to ws(s)
-    const wsUrl = backendUrl.replace(/^http/, 'ws') + `/ws/${token}`;
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+    const wsUrl = backendUrl 
+      ? backendUrl.replace(/^http/, 'ws') + `/ws/${token}`
+      : `${wsProtocol}://${window.location.host}/ws/${token}`;
     
     try {
       const ws = new WebSocket(wsUrl);

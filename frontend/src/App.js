@@ -22,6 +22,7 @@ import LiveCCTVPage from './pages/LiveCCTVPage';
 import TaskManagerPage from './pages/TaskManagerPage';
 import LiveMapPage from './pages/LiveMapPage';
 import AttendanceReportPage from './pages/AttendanceReportPage';
+import DailyReportsPage from './pages/DailyReportsPage';
 import ErrorBoundary from './components/ErrorBoundary';
 import Layout from './components/Layout';
 import './App.css';
@@ -150,6 +151,12 @@ const AppRoutes = () => {
       <Route path="/attendance-report" element={
         <ProtectedRoute roles={['admin', 'am']}>
           <AttendanceReportPage />
+        </ProtectedRoute>
+      } />
+
+      <Route path="/daily-reports" element={
+        <ProtectedRoute roles={['admin', 'am', 'helpdesk', 'eos']}>
+          <DailyReportsPage />
         </ProtectedRoute>
       } />
       
