@@ -183,8 +183,15 @@ const LiveMapPage = () => {
             <Popup className="custom-popup" maxWidth={320} minWidth={240}>
               <div className="w-full">
                 {sp.service_type === 'cctv' && (
-                  <div className="w-full aspect-video bg-black relative">
-                    <WebRTCPlayer streamId={sp.id} token={localStorage.getItem('token')} isGrid={false} />
+                  <div className="w-full aspect-video bg-black relative flex items-center justify-center overflow-hidden">
+                    {sp.status === 'online' ? (
+                      <WebRTCPlayer streamId={sp.id} token={localStorage.getItem('token')} isGrid={false} />
+                    ) : (
+                      <div className="flex flex-col items-center justify-center gap-2 text-slate-600">
+                        <Camera size={32} className="opacity-30" />
+                        <span className="text-xs text-slate-500">Stream tidak tersedia</span>
+                      </div>
+                    )}
                   </div>
                 )}
                 <div className="p-3">
